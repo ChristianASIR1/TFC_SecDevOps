@@ -1,0 +1,53 @@
+---
+- name: Preparar entorno avanzado de ataque Red Team (Alta Concurrencia)
+  hosts: redteam
+  become: yes
+
+  tasks:
+    - name: Actualizar repositorios base
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Instalar arsenal de Pentesting y utilidades de rendimiento
+      ansible.builtin.apt:
+        name:
+          - nmap       # Escaneo de puertos y evasión de firewalls
+          - sqlmap     # Inyecciones SQL automatizadas
+          - ffuf       # Fuzzing web ultrarrápido
+          - nikto      # Escáner de vulnerabilidades web
+          - hydra      # Fuerza bruta paralela
+          - tmux       # Multiplexor de terminal
+          - htop       # Monitorización de recursos
+          - curl
+          - wget
+          - python3
+          - python3-pip
+          - git
+        state: present
+
+    - name: Optimizar OS para ataques de alta concurrencia (File Descriptors)
+      ansible.builtin.blockinfile:
+        path: /etc/security/limits.conf
+        block: |
+          * soft nofile 65535
+          * hard nofile 65535
+          root soft nofile 65535
+          root hard nofile 65535
+      notify: Aplicar sysctl
+
+    - name: Clonar repositorio SecLists (Diccionarios de payloads)
+      ansible.builtin.git:
+        repo: 'https://github.com/danielmiessler/SecLists.git'
+        dest: /opt/SecLists
+        depth: 1
+
+    - name: Configurar permisos para SecLists
+      ansible.builtin.file:
+        path: /opt/SecLists
+        state: directory
+        mode: '0755'
+
+  handlers:
+    - name: Aplicar sysctl
+      ansible.builtin.command: sysctl -p

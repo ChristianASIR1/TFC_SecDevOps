@@ -1,0 +1,8 @@
+[wazuh]
+wazuh-server ansible_host=10.0.0.10 ansible_user=walter
+
+[podman]
+podman-node ansible_host=10.0.0.20 ansible_user=walter
+
+[redteam]
+redteam-node ansible_host=${redteam_ip} ansible_user=walter

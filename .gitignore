@@ -1,0 +1,16 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+*.img
+*.qcow2
+
+# Ansible
+*.retry
+/ssh_keys/
+
+
+# Varios
+.DS_Store
+*.log

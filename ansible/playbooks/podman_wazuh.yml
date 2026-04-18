@@ -1,0 +1,96 @@
+---
+- name: Despliegue Maestro Nodo Podman + Agente Wazuh
+  hosts: podman
+  become: yes
+
+  tasks:
+    - name: Instalar Podman y motor de contenedores
+      ansible.builtin.apt:
+        name: [podman, gnupg2, curl]
+        state: latest
+        update_cache: yes
+
+    - name: Configurar Repositorio y Agente Wazuh
+      block:
+
+        - name: Añadir llave GPG
+          ansible.builtin.shell: "curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/wazuh.gpg --import && chmod 644 /usr/share/keyrings/wazuh.gpg"
+          args:
+            creates: /usr/share/keyrings/wazuh.gpg
+
+        - name: Añadir repo
+          ansible.builtin.apt_repository:
+            repo: "deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main"
+
+        - name: Instalar agente
+          ansible.builtin.apt:
+            name: wazuh-agent
+            state: latest
+            update_cache: yes
+
+    - name: Vincular Agente al Manager (10.0.0.10)
+      ansible.builtin.lineinfile:
+        path: /var/ossec/etc/ossec.conf
+        regexp: '<address>MANAGER_IP</address>'
+        line: "      <address>10.0.0.10</address>"
+      notify: Reiniciar Agente
+
+    - name: Habilitar y arrancar el servicio del agente
+      systemd:
+        name: wazuh-agent
+        enabled: yes
+        state: started
+
+
+    - name: Preparar directorios y Quadlet DVWA
+      block:
+
+        - name: Crear carpeta logs
+          ansible.builtin.file:
+            path: "{{ item }}"
+            state: directory
+            mode: '0755'
+          loop: [/etc/containers/systemd, /var/log/dvwa]
+
+        - name: Escribir archivo .container
+          ansible.builtin.copy:
+            dest: /etc/containers/systemd/dvwa.container
+            content: |
+
+              [Unit]
+              Description=Contenedor DVWA vulnerable
+
+              [Container]
+              Image=docker.io/vulnerables/web-dvwa:latest
+              PublishPort=8080:80
+              Volume=/var/log/dvwa:/var/log/apache2
+              Volume=dvwa_db_data:/var/lib/mysql
+
+
+              [Install]
+              WantedBy=multi-user.target
+
+    - name: Levantar servicio DVWA
+      ansible.builtin.systemd:
+        daemon_reload: yes
+        name: dvwa.service
+        state: restarted
+        enabled: yes
+
+    - name: Monitorización de la DVWA
+      ansible.builtin.blockinfile:
+        path: /var/ossec/etc/ossec.conf
+        insertbefore: "</ossec_config>"
+        marker: "<!-- {mark} ANSIBLE MANAGED BLOCK DVWA -->"
+        block: |
+          <localfile>
+            <log_format>apache</log_format>
+            <location>/var/log/dvwa/access.log</location>
+          </localfile>
+      notify: Reiniciar Agente
+
+  handlers:
+    - name: Reiniciar Agente
+      ansible.builtin.systemd:
+        name: wazuh-agent
+        state: restarted

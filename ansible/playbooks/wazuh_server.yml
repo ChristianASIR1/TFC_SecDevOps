@@ -1,0 +1,105 @@
+---
+- name: Despliegue Maestro Wazuh Manager
+  hosts: wazuh
+  become: yes
+
+  tasks:
+    - name: Actualizar caché de paquetes
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Descargar instalador de Wazuh
+      ansible.builtin.shell: |
+        curl -sL -f -A "Mozilla/5.0" -o /root/wazuh-install.sh https://packages.wazuh.com/4.14/wazuh-install.sh
+      args:
+        creates: /root/wazuh-install.sh
+
+    - name: Ejecutar instalador/actualizador All-in-One
+      ansible.builtin.shell: "bash /root/wazuh-install.sh -a"
+      args:
+        chdir: /root
+        creates: /var/ossec/etc/ossec.conf
+
+    - name: Configurar receptor Syslog para OPNsense
+      ansible.builtin.blockinfile:
+        path: /var/ossec/etc/ossec.conf
+        insertafter: '<ossec_config>'
+        block: |
+          <remote>
+            <connection>syslog</connection>
+            <port>514</port>
+            <protocol>udp</protocol>
+            <allowed-ips>10.0.0.254</allowed-ips>
+          </remote>
+      notify: Reiniciar Wazuh Manager
+
+    - name: Extraer y bajar credenciales al host
+      block:
+        - name: Generar txt de contraseñas
+          ansible.builtin.shell: "tar -axf /root/wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt -O > /root/passwords.txt"
+          args:
+            creates: /root/passwords.txt
+        - name: Descargar a ThinkPad
+          ansible.builtin.fetch:
+            src: /root/passwords.txt
+            dest: "./credenciales_wazuh_v2.txt"
+            flat: yes
+
+    - name: Desplegar reglas personalizadas (SQLi y Brute Force)
+      copy:
+        dest: /var/ossec/etc/rules/local_rules.xml
+        owner: root
+        group: wazuh
+        mode: '0660'
+        content: |
+          <group name="local,web_attacks,">
+
+            <!-- Fuerza bruta -->
+
+            <rule id="100021" level="3">
+              <if_sid>31108, 31100</if_sid>
+              <match>POST /login.php</match>
+              <description>DVWA: Intento de autenticacion web detectado.</description>
+            </rule>
+            <rule id="100022" level="10" frequency="10" timeframe="60">
+              <if_matched_sid>100021</if_matched_sid>
+              <same_source_ip />
+              <description>DVWA: Ataque de FUERZA BRUTA web detectado.</description>
+              <mitre><id>T1110</id></mitre>
+              <group>brute_force,web_attacks,</group>
+            </rule>
+
+            <!-- SQLi -->
+
+            <rule id="100002" level="12">
+              <if_sid>31100</if_sid>
+              <regex type="pcre2">(?i)(%27|').*(or|and|union|select).*(=|\%3D)</regex>
+              <description>¡Ataque SQLi detectado!</description>
+              <mitre>
+                 <id>T1213</id>
+              </mitre>
+            </rule>
+
+          </group>
+      notify: Reiniciar Wazuh Manager
+
+    - name: Configurar Respuesta Activa en ossec.conf
+      blockinfile:
+        path: /var/ossec/etc/ossec.conf
+        marker: ""
+        insertafter: "<global>"
+        block: |
+            <active-response>
+              <command>firewall-drop</command>
+              <location>local</location>
+              <rules_id>100022</rules_id>
+              <timeout>60</timeout>
+            </active-response>
+      notify: Reiniciar Wazuh Manager
+
+  handlers:
+    - name: Reiniciar Wazuh Manager
+      ansible.builtin.systemd:
+        name: wazuh-manager
+        state: restarted

@@ -1,0 +1,30 @@
+---
+- name: Hardening del servicio SSH (CIS Benchmark)
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Aplicar configuraciones seguras en sshd_config
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '(?i)^#?{{ item.key }}\b'
+        line: '{{ item.key }} {{ item.value }}'
+        state: present
+        validate: /usr/sbin/sshd -t -f %s
+      loop:
+        - { key: 'UsePAM', value: 'yes' }
+        - { key: 'PermitUserEnvironment', value: 'no' }
+        - { key: 'PermitEmptyPasswords', value: 'no' }
+        - { key: 'MaxSessions', value: '2' }
+        - { key: 'LogLevel', value: 'INFO' }
+        - { key: 'IgnoreRhosts', value: 'yes' }
+        - { key: 'HostbasedAuthentication', value: 'no' }
+        - { key: 'GSSAPIAuthentication', value: 'no' }
+        - { key: 'MACs', value: '-hmac-md5,hmac-md5-96,hmac-ripemd160,umac-64@openssh.com,hmac-md5-etm@openssh.com,hmac-md5-96-etm@openssh.com,hmac-ripemd160-etm@openssh.com,umac-64-etm@openssh.com,umac-128-etm@openssh.com' }
+      notify: Reiniciar SSH
+
+  handlers:
+    - name: Reiniciar SSH
+      ansible.builtin.systemd:
+        name: ssh
+        state: restarted
