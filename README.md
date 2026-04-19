@@ -12,6 +12,8 @@ Todo el aprovisionamiento de recursos (KVM/Libvirt) y la configuración del soft
 
 ## 🏗️ Topología de Red y Arquitectura
 
+[![Topología de Red SecDevOps](./docs/Diagrama de infraestrura.PNG.png)](./docs/topologia.png)
+
 El entorno está segmentado mediante un firewall perimetral (OPNsense) que separa el tráfico hostil de la red interna de monitorización.
 
 * **Red Externa (WAN / Red Team):** `192.168.122.0/24`
