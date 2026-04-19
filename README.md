@@ -12,7 +12,11 @@ Todo el aprovisionamiento de recursos (KVM/Libvirt) y la configuración del soft
 
 ## 🏗️ Topología de Red y Arquitectura
 
-[![Topología de Red SecDevOps](./docs/Diagrama de infraestrura.PNG.png)](./docs/topologia.png)
+
+[![Topología de Red SecDevOps](./docs/topologia.png)](./docs/topologia.png)
+
+*Figura 1: Topología lógica y física del laboratorio SecDevOps. Se detalla la segmentación entre la zona WAN (Red Team) y LAN (Blue Team) mediante el firewall OPNsense, así como el anidamiento de contenedores en el nodo víctima.*
+
 
 El entorno está segmentado mediante un firewall perimetral (OPNsense) que separa el tráfico hostil de la red interna de monitorización.
 
