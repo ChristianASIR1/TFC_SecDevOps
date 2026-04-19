@@ -11,6 +11,7 @@
 /ssh_keys/
 
 
-# Varios
+# Otros
 .DS_Store
 *.log
+uso_git.txt
