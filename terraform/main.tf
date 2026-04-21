@@ -51,7 +51,7 @@ resource "libvirt_cloudinit_disk" "commoninit_redteam_v2" {
 resource "libvirt_volume" "opnsense_disk_v2" {
   name   = "opnsense-disk-v2.qcow2"
   pool   = "default"
-  source = "${path.module}/os_images/opnsense-goldenbase.qcow2"
+  source = "${path.module}/os_images/opnsense_v24_1_stable_NAT.qcow2"
   format = "qcow2"
 }
 
