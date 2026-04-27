@@ -95,6 +95,12 @@ resource "libvirt_volume" "redteam_disk_v2" {
 
 
 resource "null_resource" "fix_permissions_v2" {
+  triggers = {
+    opnsense_id = libvirt_volume.opnsense_disk.id
+    wazuh_id    = libvirt_volume.wazuh_disk_v2.id
+    podman_id   = libvirt_volume.podman_disk_v2.id
+    redteam_id  = libvirt_volume.redteam_disk_v2.id
+  } 
   depends_on = [
     libvirt_volume.wazuh_disk_v2,
     libvirt_volume.podman_disk_v2,
