@@ -48,10 +48,10 @@ resource "libvirt_cloudinit_disk" "commoninit_redteam_v2" {
 # ================================================
 
 # OPNsense#
-resource "libvirt_volume" "opnsense_disk_v2" {
-  name   = "opnsense-disk-v2.qcow2"
+resource "libvirt_volume" "opnsense_disk" {
+  name   = "opnsense_v26_v1.qcow2"
   pool   = "default"
-  source = "${path.module}/os_images/opnsense_v24_1_stable_NAT.qcow2"
+  source = "${path.module}/os_images/opnsense_v26_golden_v1.qcow2"
   format = "qcow2"
 }
 
@@ -98,7 +98,7 @@ resource "null_resource" "fix_permissions_v2" {
   depends_on = [
     libvirt_volume.wazuh_disk_v2,
     libvirt_volume.podman_disk_v2,
-    libvirt_volume.opnsense_disk_v2,
+    libvirt_volume.opnsense_disk,
     libvirt_volume.redteam_disk_v2,
     libvirt_cloudinit_disk.commoninit_wazuh_v2,
     libvirt_cloudinit_disk.commoninit_podman_v2,
@@ -112,7 +112,7 @@ resource "null_resource" "fix_permissions_v2" {
         /var/lib/libvirt/images/commoninit_wazuh_v2.iso \
         /var/lib/libvirt/images/podman-disk-v2.qcow2 \
         /var/lib/libvirt/images/commoninit_podman_v2.iso \
-        /var/lib/libvirt/images/opnsense-disk-v2.qcow2 \
+        /var/lib/libvirt/images/opnsense_v26_v1.qcow2 \
         /var/lib/libvirt/images/redteam-disk-v2.qcow2 \
         /var/lib/libvirt/images/commoninit_redteam_v2.iso
     EOT
@@ -131,7 +131,7 @@ resource "libvirt_domain" "opnsense_firewall" {
   memory = "2048"
   vcpu   = 2
 
-  disk { volume_id = libvirt_volume.opnsense_disk_v2.id }
+  disk { volume_id = libvirt_volume.opnsense_disk.id }
   depends_on = [null_resource.fix_permissions_v2]
 
 	# WAN #
@@ -240,9 +240,7 @@ resource "libvirt_network" "lan_secdevops" {
   mode      = "none"
   addresses = ["10.0.0.0/24"]
   autostart = true
-  dhcp { 
-    enabled = false
- }
+  dhcp { enabled = false }
 }
 
 
