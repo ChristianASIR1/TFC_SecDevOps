@@ -15,16 +15,29 @@
       args:
         creates: /root/wazuh-install.sh
 
-    - name: Ejecutar instalador/actualizador All-in-One
+    - name: Ejecutar instalador/actualizador Wazuh
       ansible.builtin.shell: "bash /root/wazuh-install.sh -a"
       args:
         chdir: /root
         creates: /var/ossec/etc/ossec.conf
 
+    - name: Extraer y bajar credenciales al host
+      block:
+        - name: Generar txt de contraseñas
+          ansible.builtin.shell: "tar -axf /root/wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt -O > /root/passwords.txt"
+          args:
+            creates: /root/passwords.txt
+        - name: Descargar a Anfitrión
+          ansible.builtin.fetch:
+            src: /root/passwords.txt
+            dest: "./credenciales_wazuh_v2.txt"
+            flat: yes
+
     - name: Configurar receptor Syslog para OPNsense
       ansible.builtin.blockinfile:
         path: /var/ossec/etc/ossec.conf
-        insertafter: '<ossec_config>'
+        insertbefore: '</ossec_config>'
+        marker: "<!-- {mark} ANSIBLE MANAGED BLOCK (SYSLOG) -->"
         block: |
           <remote>
             <connection>syslog</connection>
@@ -34,29 +47,30 @@
           </remote>
       notify: Reiniciar Wazuh Manager
 
-    - name: Extraer y bajar credenciales al host
-      block:
-        - name: Generar txt de contraseñas
-          ansible.builtin.shell: "tar -axf /root/wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt -O > /root/passwords.txt"
-          args:
-            creates: /root/passwords.txt
-        - name: Descargar a ThinkPad
-          ansible.builtin.fetch:
-            src: /root/passwords.txt
-            dest: "./credenciales_wazuh_v2.txt"
-            flat: yes
+    - name: Configurar decodificadores para Suricata (OPNsense)
+      ansible.builtin.blockinfile:
+        path: /var/ossec/etc/decoders/local_decoder.xml
+        marker: "<!-- {mark} ANSIBLE MANAGED BLOCK (DECODERS) -->"
+        block: |
+          <decoder name="suricata">
+            <program_name>^suricata</program_name>
+          </decoder>
 
-    - name: Desplegar reglas personalizadas (SQLi y Brute Force)
-      copy:
-        dest: /var/ossec/etc/rules/local_rules.xml
+          <decoder name="suricata-json">
+            <parent>suricata</parent>
+            <plugin_decoder>JSON_Decoder</plugin_decoder>
+          </decoder>
+      notify: Reiniciar Wazuh Manager
+
+    - name: Desplegar reglas personalizadas (SQLi, Brute Force y Suricata)
+      ansible.builtin.blockinfile:
+        path: /var/ossec/etc/rules/local_rules.xml
         owner: root
         group: wazuh
         mode: '0660'
-        content: |
+        marker: "<!-- {mark} ANSIBLE MANAGED BLOCK (RULES) -->"
+        block: |
           <group name="local,web_attacks,">
-
-            <!-- Fuerza bruta -->
-
             <rule id="100021" level="3">
               <if_sid>31108, 31100</if_sid>
               <match>POST /login.php</match>
@@ -69,33 +83,46 @@
               <mitre><id>T1110</id></mitre>
               <group>brute_force,web_attacks,</group>
             </rule>
-
-            <!-- SQLi -->
-
             <rule id="100002" level="12">
               <if_sid>31100</if_sid>
               <regex type="pcre2">(?i)(%27|').*(or|and|union|select).*(=|\%3D)</regex>
               <description>¡Ataque SQLi detectado!</description>
-              <mitre>
-                 <id>T1213</id>
-              </mitre>
+              <mitre><id>T1213</id></mitre>
             </rule>
+          </group>
 
+          <group name="suricata,ids,">
+            <rule id="100005" level="0">
+              <decoded_as>suricata</decoded_as>
+              <description>Logs de Suricata OPNsense procesados.</description>
+            </rule>
+            <rule id="100006" level="3">
+              <if_sid>100005</if_sid>
+              <field name="event_type">^alert$</field>
+              <description>Suricata: Alerta detectada - $(alert.signature)</description>
+              <group>ids,suricata,alert_exploit,</group>
+            </rule>
+            <rule id="100007" level="12">
+              <if_matched_sid>100006</if_matched_sid>
+              <field name="alert.severity">^1$</field>
+              <description>Suricata: Alerta CRÍTICA detectada - $(alert.signature)</description>
+              <group>ids,suricata,priority_1,</group>
+            </rule>
           </group>
       notify: Reiniciar Wazuh Manager
 
     - name: Configurar Respuesta Activa en ossec.conf
-      blockinfile:
+      ansible.builtin.blockinfile:
         path: /var/ossec/etc/ossec.conf
-        marker: ""
-        insertafter: "<global>"
+        insertbefore: "</ossec_config>"
+        marker: "<!-- {mark} ANSIBLE MANAGED BLOCK (ACTIVE RESPONSE) -->"
         block: |
-            <active-response>
-              <command>firewall-drop</command>
-              <location>local</location>
-              <rules_id>100022</rules_id>
-              <timeout>60</timeout>
-            </active-response>
+          <active-response>
+            <command>firewall-drop</command>
+            <location>local</location>
+            <rules_id>100022</rules_id>
+            <timeout>60</timeout>
+          </active-response>
       notify: Reiniciar Wazuh Manager
 
   handlers:
