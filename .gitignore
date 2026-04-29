@@ -10,8 +10,12 @@
 *.retry
 /ssh_keys/
 
+# Secretos #
+credenciales_wazuh.txt
+
 
 # Otros
 .DS_Store
 *.log
 uso_git.txt
+

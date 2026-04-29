@@ -21,17 +21,19 @@
         chdir: /root
         creates: /var/ossec/etc/ossec.conf
 
-    - name: Extraer y bajar credenciales al host
+    - name: Extraer, mover y limpiar credenciales de Wazuh
       block:
-        - name: Generar txt de contraseñas
+        - name: Extraer txt de contraseñas
           ansible.builtin.shell: "tar -axf /root/wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt -O > /root/passwords.txt"
-          args:
-            creates: /root/passwords.txt
         - name: Descargar a Anfitrión
           ansible.builtin.fetch:
             src: /root/passwords.txt
-            dest: "./credenciales_wazuh_v2.txt"
+            dest: "/home/walter/v2_secdevops/credenciales_wazuh.txt"
             flat: yes
+        - name: Eliminar rastro de contraseñas en MV (Hardening)
+          ansible.builtin.file:
+            path: /root/passwords.txt
+            state: absent
 
     - name: Configurar receptor Syslog para OPNsense
       ansible.builtin.blockinfile:
