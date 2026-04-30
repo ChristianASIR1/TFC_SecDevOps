@@ -7,7 +7,7 @@
 # Variables #
 DIR_PROYECTO="/home/walter/v2_secdevops"
 LLAVE_SSH="$DIR_PROYECTO/ssh_keys/ssh_tfc_v2"
-IP_REDTEAM=$(grep -A 1 "\[redteam\]" ansible/hosts.ini 2>/dev/null | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | head -n 1)
+IP_REDTEAM=$(cat /home/walter/v2_secdevops/ansible/hosts.ini | grep redteam | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b")
 
 
 # Parar la ejecución si falla algun comando:
@@ -19,8 +19,9 @@ set -e
 echo "Limpiando claves SSH antiguas de ejecuciones previas..."
 ssh-keygen -f "$HOME/.ssh/known_hosts" -R "10.0.0.10" >/dev/null 2>&1 || true
 ssh-keygen -f "$HOME/.ssh/known_hosts" -R "10.0.0.20" >/dev/null 2>&1 || true
+ 
 if [ -n "$IP_REDTEAM" ]; then
-    ssh-keygen -f "$HOME/.ssh/known_hosts" -R "$IP_REDTEAM" >/dev/null 2>&1 || true
+    ssh-keygen -f '/home/walter/.ssh/known_hosts' -R "$IP_REDTEAM" >/dev/null 2>&1 || true
 fi
 
 
