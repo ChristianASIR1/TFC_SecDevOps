@@ -5,13 +5,24 @@
 # ==========================================================
 
 # Variables #
-DIR_PROYECTO:"/home/walter/v2_secdevops"
+DIR_PROYECTO="/home/walter/v2_secdevops"
 LLAVE_SSH="$DIR_PROYECTO/ssh_keys/ssh_tfc_v2"
-IP_REDTEAM=$(grep -A 1 "\[redteam\]" ansible/hosts.ini | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | head -n 1)
+IP_REDTEAM=$(grep -A 1 "\[redteam\]" ansible/hosts.ini 2>/dev/null | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | head -n 1)
 
 
 # Parar la ejecución si falla algun comando:
 set -e
+
+
+# Limpieza de claves Known_hosts SSH #
+
+echo "Limpiando claves SSH antiguas de ejecuciones previas..."
+ssh-keygen -f "$HOME/.ssh/known_hosts" -R "10.0.0.10" >/dev/null 2>&1 || true
+ssh-keygen -f "$HOME/.ssh/known_hosts" -R "10.0.0.20" >/dev/null 2>&1 || true
+if [ -n "$IP_REDTEAM" ]; then
+    ssh-keygen -f "$HOME/.ssh/known_hosts" -R "$IP_REDTEAM" >/dev/null 2>&1 || true
+fi
+
 
 
 # Comprobación claves SSH #
@@ -51,6 +62,7 @@ done
 export ANSIBLE_HOST_KEY_CHECKING=False
 export ANSIBLE_SSH_COMMON_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 
+IP_REDTEAM=$(grep -A 1 "\[redteam\]" ansible/hosts.ini | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | head -n 1)
 
 echo "Ejecutando 1/6: Despliegue inicial..."
 ansible-playbook -i ansible/hosts.ini ansible/playbooks/despliegue_inicial.yml --private-key "$LLAVE_SSH"
