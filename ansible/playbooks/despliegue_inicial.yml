@@ -5,10 +5,9 @@
   gather_facts: yes
 
   tasks:
-    - name: Actualizar el sistema (Apt upgrade)
+    - name: Actualizar repositorios (apt-update)
       ansible.builtin.apt:
         update_cache: yes
-        upgrade: dist
         cache_valid_time: 3600
 
     - name: Instalar herramientas esenciales
@@ -20,10 +19,3 @@
           - net-tools
         state: present
 
-    - name: Verificar estado de la memoria RAM
-      ansible.builtin.shell: free -h
-      register: ram_status
-
-    - name: Mostrar RAM (Para confirmar los 4GB asignados)
-      ansible.builtin.debug:
-        var: ram_status.stdout_lines
