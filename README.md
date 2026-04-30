@@ -32,14 +32,31 @@ El entorno está segmentado mediante un firewall perimetral (OPNsense) que separ
 ## 🚀 Despliegue Automatizado (Quickstart)
 
 El proyecto cuenta con un script que fusiona las fases de provisión (Terraform) y configuración (Ansible), resolviendo las condiciones de carrera y validando la disponibilidad de los puertos antes de inyectar configuraciones.
+Este proyecto utiliza el paradigma de Infraestructura como Código (IaC) puro. Antes de lanzar el script de automatización, la máquina host debe cumplir con los siguientes requisitos.
 
-### Prerrequisitos
-* Host Linux con KVM/Libvirt activo.
-* Terraform y Ansible instalados.
-* Clave pública SSH configurada para la inyección vía `cloud-init`.
+### 🛠️ Prerrequisitos del Sistema (Host)
+
+1. **Herramientas Base:**
+   Asegúrate de tener instalados en tu distribución Linux los siguientes paquetes:
+   * **Virtualización:** `qemu-kvm`, `libvirt-daemon-system`, `libvirt-clients`, `bridge-utils`.
+   * **Orquestación y Configuración:** `terraform`, `ansible`.
+   
+   *Nota de permisos:* El usuario local debe pertenecer a los grupos `libvirt` y `kvm` para interactuar con el demonio de virtualización sin requerir privilegios de superusuario (`sudo`).
+
+2. **Infraestructura de Claves SSH:**
+   Para cumplir con el principio de *Least Privilege* y evitar versionar credenciales, debes generar un par de claves locales. El script de despliegue validará su existencia.
+   
+   Ejecuta en tu terminal:
+   ```bash
+   mkdir -p ~/v2_secdevops/ssh_keys
+   ssh-keygen -t ed25519 -f ~/v2_secdevops/ssh_keys/ssh_tfc_v2 -N "" -C "tfc-secdevops"
+
+
+
 
 ### Ejecución
-Basta con ejecutar el script principal de despliegue:
+
+El proyecto cuenta con un script que fusiona las fases de provisión (Terraform) y configuración (Ansible), resolviendo las condiciones de carrera y validando la disponibilidad de los puertos antes de inyectar configuraciones.
 
 ```bash
 git clone git@github.com:ChristianASIR1/TFC_SecDevOps.git

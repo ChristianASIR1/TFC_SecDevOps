@@ -4,11 +4,14 @@
 *.tfstate.backup
 *.tfvars
 *.img
+*.iso
 *.qcow2
 
 # Ansible
 *.retry
 /ssh_keys/
+*.log
+inventory.ini
 
 # Secretos #
 credenciales_wazuh.txt

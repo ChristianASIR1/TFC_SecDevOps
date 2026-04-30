@@ -4,12 +4,32 @@
 # Script de Despliegue Automatizado SecDevOps - TFC
 # ==========================================================
 
-# El script se para si falla algun comando:
+# Variables #
+DIR_PROYECTO:"/home/walter/v2_secdevops"
+LLAVE_SSH="$DIR_PROYECTO/ssh_keys/ssh_tfc_v2"
+IP_REDTEAM=$(grep -A 1 "\[redteam\]" ansible/hosts.ini | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | head -n 1)
+
+
+# Parar la ejecución si falla algun comando:
 set -e
+
+
+# Comprobación claves SSH #
+
+if [ ! -f "$LLAVE_SSH" ]; then
+    echo "[ERROR] Clave SSH no encontrada en $LLAVE_SSH"
+    echo "Por favor, crea el par de claves antes de lanzar el despliegue:"
+    echo "ssh-keygen -t ed25519 -f $LLAVE_SSH"
+    echo "Y asegúrate de pegar el contenido de .pub en terraform/cloud_init.cfg"
+    exit 1
+else
+    echo "Clave SSH detectada"
+fi
+
 
 # Terraform: #
 echo  "Levantando infraestructura con Terraform..."
-cd "/home/walter/v2_secdevops/terraform"
+cd "$DIR_PROYECTO/terraform"
 terraform init
 terraform apply -auto-approve
 cd ..
@@ -30,8 +50,6 @@ done
 
 export ANSIBLE_HOST_KEY_CHECKING=False
 export ANSIBLE_SSH_COMMON_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-LLAVE_SSH="/home/walter/v2_secdevops/ssh_keys/ssh_tfc_v2"
-IP_REDTEAM=$(grep -A 1 "\[redteam\]" ansible/hosts.ini | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | head -n 1)
 
 
 echo "Ejecutando 1/6: Despliegue inicial..."
@@ -59,4 +77,4 @@ echo "[EXITO]  Infraestructura SecDevOps desplegada"
 echo " Manager Wazuh: https://10.0.0.10"
 echo " Aplicación DVWA: http://10.0.0.20:8080"
 echo "MV Red-Team:  ${IP_REDTEAM:-IP_No_Encontrada}"
-echo " Contraseñas guardadas en: /home/walter/v2_secdevops/credenciales_wazuh.txt"
+echo " Contraseñas guardadas en: $DIR_PROYECTO/credenciales_wazuh.txt"
