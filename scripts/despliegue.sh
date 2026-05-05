@@ -7,7 +7,8 @@
 # Variables #
 DIR_PROYECTO="/home/walter/v2_secdevops"
 LLAVE_SSH="$DIR_PROYECTO/ssh_keys/ssh_tfc_v2"
-IP_REDTEAM=$(cat /home/walter/v2_secdevops/ansible/hosts.ini | grep redteam | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b")
+IP_REDTEAM=$(terraform output -raw redteam_ip 2>/dev/null)
+#IP_REDTEAM=$(cat /home/walter/v2_secdevops/ansible/hosts.ini | grep redteam | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b")
 
 
 # Parar la ejecución si falla algun comando:
@@ -49,7 +50,7 @@ cd ..
 echo "Esperando inicialización del SO y SSH (Cloud-init)"
 sleep 45
 
-for ip in "10.0.0.10" "10.0.0.20"; do
+for ip in "10.0.0.10" "10.0.0.20" "$IP_REDTEAM"; do
     echo "Comprobando conexión SSH en $ip..."
     while ! nc -z -w5 $ip 22; do
         sleep 5
@@ -62,8 +63,6 @@ done
 
 export ANSIBLE_HOST_KEY_CHECKING=False
 export ANSIBLE_SSH_COMMON_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-
-IP_REDTEAM=$(grep -A 1 "\[redteam\]" ansible/hosts.ini | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | head -n 1)
 
 echo "Ejecutando 1/6: Despliegue inicial..."
 ansible-playbook -i ansible/hosts.ini ansible/playbooks/despliegue_inicial.yml --private-key "$LLAVE_SSH"

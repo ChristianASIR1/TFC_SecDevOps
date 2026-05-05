@@ -263,3 +263,12 @@ resource "local_file" "ansible_inventory" {
 # Salida:
   filename = "${path.module}/../ansible/hosts.ini"
 }
+
+# ==========================================
+# 7. EXTRACCIÓN DE VARIABLES (OUTPUTS)
+# ==========================================
+
+output "redteam_ip" {
+  description = "IP asignada dinámicamente al nodo Red Team"
+  value       = try(libvirt_domain.redteam_node.network_interface[0].addresses[0], "IP desconocida")
+}
