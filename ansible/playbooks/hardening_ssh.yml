@@ -1,9 +1,12 @@
 ---
-- name: Hardening del servicio SSH (CIS Benchmark)
+- name: Hardening de servicios (CIS Benchmark)
   hosts: all
   become: yes
 
   tasks:
+    - name: Recolectar información sobre los servicios del sistema
+      ansible.builtin.service_facts:
+
     - name: Asegurar que existe /run/sshd para la validación de Ansible
       ansible.builtin.file:
         path: /run/sshd
@@ -22,15 +25,71 @@
         - { key: 'PermitUserEnvironment', value: 'no' }
         - { key: 'PermitEmptyPasswords', value: 'no' }
         - { key: 'MaxSessions', value: '2' }
-        - { key: 'LogLevel', value: 'INFO' }
+        - { key: 'LogLevel', value: 'VERBOSE' }
         - { key: 'IgnoreRhosts', value: 'yes' }
         - { key: 'HostbasedAuthentication', value: 'no' }
         - { key: 'GSSAPIAuthentication', value: 'no' }
         - { key: 'MACs', value: '-hmac-md5,hmac-md5-96,hmac-ripemd160,umac-64@openssh.com,hmac-md5-etm@openssh.com,hmac-md5-96-etm@openssh.com,hmac-ripemd160-etm@openssh.com,umac-64-etm@openssh.com,umac-128-etm@openssh.com' }
       notify: Reiniciar SSH
 
+    - name: Crear directorio de override para el agente de Wazuh
+      ansible.builtin.file:
+        path: /etc/systemd/system/wazuh-agent.service.d
+        state: directory
+        mode: '0755'
+      when: "'wazuh-agent.service' in ansible_facts.services"
+
+    - name: Configurar dependencia Servicio Ssh levantado en el Agente
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/wazuh-agent.service.d/override.conf
+        content: |
+          [Unit]
+          After=ssh.service
+          Wants=ssh.service
+          
+          [Service]
+          ExecStartPre=/bin/sleep 5
+      when: "'wazuh-agent.service' in ansible_facts.services"
+      notify: Recargar systemd y reiniciar agente
+
+
+# ----------------- Hardening de red (SYSCTL) ------------ #
+
+    - name: Configurar parámetros de red seguros (sysctl)
+      ansible.posix.sysctl:
+        name: "{{ item.key }}"
+        value: "{{ item.value }}"
+        state: present
+        reload: yes
+      loop:
+        - { key: 'net.ipv4.ip_forward', value: '0' }
+        - { key: 'net.ipv4.conf.all.accept_redirects', value: '0' }
+        - { key: 'net.ipv4.conf.default.accept_redirects', value: '0' }
+        - { key: 'net.ipv4.conf.all.secure_redirects', value: '0' }
+        - { key: 'net.ipv4.conf.default.secure_redirects', value: '0' }
+
+# ----------------- DESACTIVACION MÓDULOS DEL KERNEL ------------ #
+
+    - name: Blacklist de sistemas de archivos innecesarios
+      ansible.builtin.copy:
+        dest: "/etc/modprobe.d/cis_blacklist.conf"
+        content: |
+          install cramfs /bin/false
+          install freevxfs /bin/false
+          install jffs2 /bin/false
+          install hfs /bin/false
+          install hfsplus /bin/false
+          install udf /bin/false
+
+
   handlers:
     - name: Reiniciar SSH
       ansible.builtin.systemd:
         name: ssh
+        state: restarted
+    
+    - name: Recargar systemd y reiniciar agente
+      ansible.builtin.systemd:
+        daemon_reload: yes
+        name: wazuh-agent
         state: restarted
