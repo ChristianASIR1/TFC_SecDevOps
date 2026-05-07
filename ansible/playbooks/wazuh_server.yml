@@ -72,45 +72,60 @@
         mode: '0660'
         marker: "<!-- {mark} ANSIBLE MANAGED BLOCK (RULES) -->"
         block: |
-          <group name="local,web_attacks,">
-            <rule id="100021" level="3">
+         <group name="local,capa_aplicacion,">
+            <rule id="100021" level="1">
               <if_sid>31108, 31100</if_sid>
               <match>POST /login.php</match>
-              <description>DVWA: Intento de autenticacion web detectado.</description>
+              <description>[Capa App] DVWA: Intento de autenticación web procesado.</description>
             </rule>
+            
             <rule id="100022" level="10" frequency="10" timeframe="60">
               <if_matched_sid>100021</if_matched_sid>
               <same_source_ip />
-              <description>DVWA: Ataque de FUERZA BRUTA web detectado.</description>
+              <description>[Capa App] DVWA: Ataque de FUERZA BRUTA web detectado.</description>
               <mitre><id>T1110</id></mitre>
-              <group>brute_force,web_attacks,</group>
+              <group>fuerza_bruta,ataques_web,hids,</group>
             </rule>
+            
             <rule id="100002" level="12">
               <if_sid>31100</if_sid>
               <regex type="pcre2">(?i)(%27|').*(or|and|union|select).*(=|\%3D)</regex>
-              <description>¡Ataque SQLi detectado!</description>
+              <description>[Capa App] WAF/DVWA: ¡Ataque de inyección SQL detectado!</description>
               <mitre><id>T1213</id></mitre>
+              <group>inyeccion_sql,ataques_web,hids,</group>
             </rule>
           </group>
 
-          <group name="suricata,ids,">
+          <group name="suricata,capa_red,">
             <rule id="100005" level="0">
               <decoded_as>suricata</decoded_as>
-              <description>Logs de Suricata OPNsense procesados.</description>
+              <description>[Capa Red] Logs de Suricata OPNsense procesados.</description>
             </rule>
+            
             <rule id="100006" level="3">
               <if_sid>100005</if_sid>
               <field name="event_type">^alert$</field>
-              <description>Suricata: Alerta detectada - $(alert.signature)</description>
-              <group>ids,suricata,alert_exploit,</group>
+              <description>[Capa Red] OPNsense Suricata: Alerta detectada - $(alert.signature)</description>
+              <group>ids,suricata,alerta_exploit,nids,</group>
             </rule>
+            
             <rule id="100007" level="12">
               <if_matched_sid>100006</if_matched_sid>
               <field name="alert.severity">^1$</field>
-              <description>Suricata: Alerta CRÍTICA detectada - $(alert.signature)</description>
-              <group>ids,suricata,priority_1,</group>
+              <description>[Capa Red] OPNsense Suricata: Alerta CRÍTICA detectada - $(alert.signature)</description>
+              <group>ids,suricata,prioridad_1,nids,</group>
             </rule>
           </group>
+            
+          <group name="local,tuning,">
+            <rule id="100030" level="0">
+              <if_sid>533</if_sid>
+              <match>conmon|systemd-resolve</match>
+              <description>[Tuning] Silenciados cambios de PID en puertos de Podman y DNS locales.</description>
+            </rule>
+          </group>
+
+ 
       notify: Reiniciar Wazuh Manager
 
     - name: Configurar Respuesta Activa en ossec.conf

