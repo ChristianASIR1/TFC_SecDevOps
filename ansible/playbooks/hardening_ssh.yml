@@ -62,11 +62,11 @@
         state: present
         reload: yes
       loop:
-        - { key: 'net.ipv4.ip_forward', value: '0' }
         - { key: 'net.ipv4.conf.all.accept_redirects', value: '0' }
         - { key: 'net.ipv4.conf.default.accept_redirects', value: '0' }
         - { key: 'net.ipv4.conf.all.secure_redirects', value: '0' }
         - { key: 'net.ipv4.conf.default.secure_redirects', value: '0' }
+        - { key: 'net.ipv4.conf.default.secure_redirects', value: '1' }
 
 # ----------------- DESACTIVACION MÓDULOS DEL KERNEL ------------ #
 
