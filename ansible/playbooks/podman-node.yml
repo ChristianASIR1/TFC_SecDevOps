@@ -1,0 +1,135 @@
+---
+
+
+- name: Migración Integral a Rootless - WAF + DVWA + Wazuh Agent
+  hosts: podman
+  become: yes
+
+  vars:
+    user_name: walter
+    user_home: "/home/{{ user_name }}"
+    waf_port: 8081
+    dvwa_port: 8082
+
+  tasks:
+    - name: Persistencia de procesos para el usuario (Linger)
+      ansible.builtin.command: "loginctl enable-linger {{ user_name }}"
+      args:
+        creates: "/var/lib/systemd/linger/{{ user_name }}"
+
+    - name: Crear estructura de directorios en el Home de walter
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ user_name }}"
+        group: "{{ user_name }}"
+        mode: '0755'
+      loop:
+        - "{{ user_home }}/dvwa/logs"
+        - "{{ user_home }}/dvwa/mysql"
+        - "{{ user_home }}/waf/logs"
+        - "{{ user_home }}/waf/conf"
+        - "{{ user_home }}/.config/containers/systemd"
+
+
+    - name: Configuración de Nginx para el WAF (Proxy al 8082)
+      ansible.builtin.copy:
+        dest: "{{ user_home }}/waf/conf/default.conf"
+        owner: "{{ user_name }}"
+        group: "{{ user_name }}"
+        content: |
+          server {
+              listen {{ waf_port }};
+              server_name _;
+              location / {
+                  proxy_pass http://127.0.0.1:{{ dvwa_port }};
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Real-IP $remote_addr;
+              }
+          }
+    - name: Configurar VirtualHost de Apache para registrar la IP real
+      ansible.builtin.copy:
+        dest: "{{ user_home }}/dvwa/000-default.conf"
+        owner: "{{ user_name }}"
+        group: "{{ user_name }}"
+        content: |
+          <VirtualHost *:80>
+              ServerAdmin webmaster@localhost
+              DocumentRoot /var/www/html
+              ErrorLog ${APACHE_LOG_DIR}/error.log
+              LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" proxy
+              CustomLog ${APACHE_LOG_DIR}/access.log proxy
+          </VirtualHost>
+
+    - name: Crear Quadlet para DVWA
+      ansible.builtin.copy:
+        dest: "{{ user_home }}/.config/containers/systemd/dvwa.container"
+        owner: "{{ user_name }}"
+        group: "{{ user_name }}"
+        content: |
+          [Unit]
+          Description=Contenedor DVWA Rootless
+
+          [Container]
+          Image=docker.io/vulnerables/web-dvwa:latest
+          PublishPort={{ dvwa_port }}:80
+          Volume={{ user_home }}/dvwa/logs:/var/log/apache2:Z
+          Volume=dvwa_db_data:/var/lib/mysql
+          #Volume={{ user_home }}/dvwa/realip.conf:/etc/apache2/conf-enabled/realip.conf:Z
+          Volume={{ user_home }}/dvwa/000-default.conf:/etc/apache2/sites-enabled/000-default.conf:Z
+          [Install]
+          WantedBy=default.target
+
+
+    - name: Crear Quadlet para WAF
+      ansible.builtin.copy:
+        dest: "{{ user_home }}/.config/containers/systemd/waf.container"
+        owner: "{{ user_name }}"
+        group: "{{ user_name }}"
+        content: |
+          [Unit]
+          After=dvwa.service
+
+          [Container]
+          Image=docker.io/owasp/modsecurity-crs:nginx
+          Volume={{ user_home }}/waf/conf/default.conf:/etc/nginx/templates/conf.d/default.conf.template:Z
+          Volume={{ user_home }}/waf/logs:/var/log/nginx:Z,U
+          Network=host
+
+          [Install]
+          WantedBy=default.target
+
+    - name: Iniciar servicios en el contexto de usuario walter
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        scope: user
+        state: started
+        enabled: yes
+        daemon_reload: yes
+      become_user: "{{ user_name }}"
+      loop:
+        - dvwa
+        - waf
+
+    - name: Configurar Wazuh para leer logs Rootless
+      ansible.builtin.blockinfile:
+        path: /var/ossec/etc/ossec.conf
+        insertbefore: "</ossec_config>"
+        marker: "<!-- {mark} ANSIBLE MANAGED BLOCK WAF -->"
+        block: |
+          <localfile>
+            <log_format>apache</log_format>
+            <location>{{ user_home }}/waf/logs/access.log</location>
+          </localfile>
+          <localfile>
+            <log_format>apache</log_format>
+            <location>{{ user_home }}/waf/logs/error.log</location>
+          </localfile>
+      notify: Reiniciar Agente
+
+  handlers:
+    - name: Reiniciar Agente
+      ansible.builtin.service:
+        name: wazuh-agent
+        state: restarted

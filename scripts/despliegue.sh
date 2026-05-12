@@ -74,7 +74,7 @@ echo "Ejecutando 3/6: Instalación Wazuh Manager"
 ansible-playbook -i ansible/hosts.ini ansible/playbooks/wazuh_server.yml --private-key "$LLAVE_SSH"
 
 echo "Ejecutando 4/6: Despliegue Podman, DVWA y Wazuh Agent"
-ansible-playbook -i ansible/hosts.ini ansible/playbooks/podman_wazuh.yml --private-key "$LLAVE_SSH"
+ansible-playbook -i ansible/hosts.ini ansible/playbooks/podman-node.yml --private-key "$LLAVE_SSH"
 
 echo "Ejecutando 5/6: Despliegue WAF"
 ansible-playbook -i ansible/hosts.ini ansible/playbooks/instalar_waf.yml --private-key "$LLAVE_SSH"

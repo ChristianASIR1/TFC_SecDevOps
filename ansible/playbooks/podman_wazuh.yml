@@ -40,42 +40,53 @@
         name: wazuh-agent
         enabled: yes
         state: started
+#-------------------------------------------------------------------------------------------
+    - name: Habilitar persistencia de procesos para el usuario walter
+      ansible.builtin.command: loginctl enable-linger walter
+      args:
+        creates: "/var/lib/systemd/linger/walter"
 
 
-    - name: Preparar directorios y Quadlet DVWA
-      block:
+    - name: Crear directorios de datos en el Home de walter
+      ansible.builtin.file:
+        path: "/home/walter/{{ item }}"
+        state: directory
+        owner: walter
+        group: walter
+        mode: '0755'
+      loop:
+        - "dvwa/logs"
+        - "dvwa/mysql"
+        - ".config/containers/systemd"
 
-        - name: Crear carpeta logs
-          ansible.builtin.file:
-            path: "{{ item }}"
-            state: directory
-            mode: '0755'
-          loop: [/etc/containers/systemd, /var/log/dvwa]
+    - name: Desplegar Quadlet en el contexto de usuario
+      ansible.builtin.copy:
+        dest: "/home/walter/.config/containers/systemd/dvwa.container"
+        owner: walter
+        group: walter
+        content: |
+          [Container]
+          Image=docker.io/vulnerables/web-dvwa:latest
+          PublishPort=8080:80
+          Volume=/home/walter/dvwa/logs:/var/log/apache2:Z
+          Volume=/home/walter/dvwa/mysql:/var/lib/mysql:Z
 
-        - name: Escribir archivo .container
-          ansible.builtin.copy:
-            dest: /etc/containers/systemd/dvwa.container
-            content: |
-
-              [Unit]
-              Description=Contenedor DVWA vulnerable
-
-              [Container]
-              Image=docker.io/vulnerables/web-dvwa:latest
-              PublishPort=8080:80
-              Volume=/var/log/dvwa:/var/log/apache2
-              Volume=dvwa_db_data:/var/lib/mysql
+          [Install]
+          WantedBy=default.target
 
 
-              [Install]
-              WantedBy=multi-user.target
-
-    - name: Levantar servicio DVWA
+    - name: Iniciar servicio DVWA en modo usuario
       ansible.builtin.systemd:
-        daemon_reload: yes
-        name: dvwa.service
-        state: restarted
+        name: dvwa
+        scope: user
+        state: started
         enabled: yes
+        daemon_reload: yes
+      become: yes
+      become_user: walter
+
+#------------------------------------------------------------------------------------------
+
 
     - name: Monitorización de la DVWA
       ansible.builtin.blockinfile:
@@ -85,7 +96,7 @@
         block: |
           <localfile>
             <log_format>apache</log_format>
-            <location>/var/log/dvwa/access.log</location>
+            <location>/home/walter/dvwa/logs/access.log</location>
           </localfile>
       notify: Reiniciar Agente
 
