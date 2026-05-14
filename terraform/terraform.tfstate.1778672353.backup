@@ -1,0 +1,729 @@
+{
+  "version": 4,
+  "terraform_version": "1.15.2",
+  "serial": 94,
+  "lineage": "84c82aec-de3a-3967-31f4-82e32cd2e31f",
+  "outputs": {
+    "redteam_ip": {
+      "value": "IP desconocida",
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "mode": "managed",
+      "type": "libvirt_cloudinit_disk",
+      "name": "commoninit_podman_v2",
+      "provider": "provider[\"registry.terraform.io/dmacvicar/libvirt\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "/var/lib/libvirt/images/commoninit_podman_v2.iso;815e746e-b48a-4adf-8638-9b1fab271d2b",
+            "meta_data": "",
+            "name": "commoninit_podman_v2.iso",
+            "network_config": "version: 2\nethernets:\n  ens3:\n    dhcp4: false\n    addresses:\n      - 10.0.0.20/24\n    routes:\n      - to: default\n        via: 10.0.0.254\n    nameservers:\n      addresses: [9.9.9.9, 1.1.1.2]\n",
+            "pool": "default",
+            "user_data": "#cloud-config\n\n# 1. Configuración del usuario administrador\nusers:\n  - name: walter\n    sudo: ALL=(ALL) NOPASSWD:ALL\n    groups: users, admin\n    shell: /bin/bash\n    lock_passwd: false\n    passwd: \"$6$fiQHuPJPs.Dfdz05$2lnqVHsjzNMm9MJCkAdMX3h.cgIZRLFpCQ1Ef6KG8cEsgs2fdlX8D.YG//j5TAz4mxEWVS258dYs5uW4SoV401\"\n    ssh_authorized_keys:\n      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP1Zj4Zj9BfTzob0mAGz14KuNtOV9mVpcyrPQWuzhaOz walter@thinkpad-lab\n\n# 3. Configuración SSH\nssh_pwauth: false\n\n# 4. Actualización automática al nacer // Lo va a actualizar ansible:\npackage_update: true\npackage_upgrade: false\n\n# 5. Hostname personalizado al nombre de la MV:\n\nhostname: podman-node\nfqdn: podman-node.secdevops.local\nmanage_etc_hosts: true\n"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "libvirt_cloudinit_disk",
+      "name": "commoninit_redteam_v2",
+      "provider": "provider[\"registry.terraform.io/dmacvicar/libvirt\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "/var/lib/libvirt/images/commoninit_redteam_v2.iso;131a0572-c653-4dcd-bd39-fad1e37789db",
+            "meta_data": "",
+            "name": "commoninit_redteam_v2.iso",
+            "network_config": "",
+            "pool": "default",
+            "user_data": "#cloud-config\n\n# 1. Configuración del usuario administrador\nusers:\n  - name: walter\n    sudo: ALL=(ALL) NOPASSWD:ALL\n    groups: users, admin\n    shell: /bin/bash\n    lock_passwd: false\n    passwd: \"$6$fiQHuPJPs.Dfdz05$2lnqVHsjzNMm9MJCkAdMX3h.cgIZRLFpCQ1Ef6KG8cEsgs2fdlX8D.YG//j5TAz4mxEWVS258dYs5uW4SoV401\"\n    ssh_authorized_keys:\n      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP1Zj4Zj9BfTzob0mAGz14KuNtOV9mVpcyrPQWuzhaOz walter@thinkpad-lab\n\n# 3. Configuración SSH\nssh_pwauth: false\n\n# 4. Actualización automática al nacer // Lo va a actualizar ansible:\npackage_update: true\npackage_upgrade: false\n\n# 5. Hostname personalizado al nombre de la MV:\n\nhostname: redteam-node\nfqdn: redteam-node.secdevops.local\nmanage_etc_hosts: true\n"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "libvirt_cloudinit_disk",
+      "name": "commoninit_wazuh_v2",
+      "provider": "provider[\"registry.terraform.io/dmacvicar/libvirt\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "/var/lib/libvirt/images/commoninit_wazuh_v2.iso;263a18c7-683e-48f1-a77e-e8d4a0b51a7b",
+            "meta_data": "",
+            "name": "commoninit_wazuh_v2.iso",
+            "network_config": "version: 2\nethernets:\n  ens3:\n    dhcp4: false\n    addresses:\n      - 10.0.0.10/24\n    routes:\n      - to: default\n        via: 10.0.0.254\n    nameservers:\n      addresses: [9.9.9.9, 1.1.1.2]\n",
+            "pool": "default",
+            "user_data": "#cloud-config\n\n# 1. Configuración del usuario administrador\nusers:\n  - name: walter\n    sudo: ALL=(ALL) NOPASSWD:ALL\n    groups: users, admin\n    shell: /bin/bash\n    lock_passwd: false\n    passwd: \"$6$fiQHuPJPs.Dfdz05$2lnqVHsjzNMm9MJCkAdMX3h.cgIZRLFpCQ1Ef6KG8cEsgs2fdlX8D.YG//j5TAz4mxEWVS258dYs5uW4SoV401\"\n    ssh_authorized_keys:\n      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP1Zj4Zj9BfTzob0mAGz14KuNtOV9mVpcyrPQWuzhaOz walter@thinkpad-lab\n\n# 3. Configuración SSH\nssh_pwauth: false\n\n# 4. Actualización automática al nacer // Lo va a actualizar ansible:\npackage_update: true\npackage_upgrade: false\n\n# 5. Hostname personalizado al nombre de la MV:\n\nhostname: wazuh-server\nfqdn: wazuh-server.secdevops.local\nmanage_etc_hosts: true\n"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "libvirt_domain",
+      "name": "opnsense_firewall",
+      "provider": "provider[\"registry.terraform.io/dmacvicar/libvirt\"]",
+      "instances": [
+        {
+          "status": "tainted",
+          "schema_version": 0,
+          "attributes": {
+            "arch": "x86_64",
+            "autostart": false,
+            "boot_device": [],
+            "cloudinit": null,
+            "cmdline": [],
+            "console": [
+              {
+                "source_host": "127.0.0.1",
+                "source_path": "",
+                "source_service": "0",
+                "target_port": "0",
+                "target_type": "serial",
+                "type": "pty"
+              }
+            ],
+            "coreos_ignition": null,
+            "cpu": [
+              {
+                "mode": "custom"
+              }
+            ],
+            "description": "",
+            "disk": [
+              {
+                "block_device": "",
+                "file": "",
+                "scsi": false,
+                "url": "",
+                "volume_id": "/var/lib/libvirt/images/opnsense26_v2.qcow2",
+                "wwn": ""
+              }
+            ],
+            "emulator": "/usr/bin/qemu-system-x86_64",
+            "filesystem": [],
+            "firmware": null,
+            "fw_cfg_name": "opt/com.coreos/config",
+            "graphics": [],
+            "id": "f01e7930-b7c2-4c05-ab84-ec9d41df3d4a",
+            "initrd": "",
+            "kernel": "",
+            "machine": "ubuntu",
+            "memory": 2048,
+            "metadata": null,
+            "name": "opnsense-firewall",
+            "network_interface": [
+              {
+                "addresses": [],
+                "bridge": "",
+                "hostname": "",
+                "mac": "52:54:00:00:00:FF",
+                "macvtap": "",
+                "network_id": "9a205728-251a-4ca7-a687-64f64e94da03",
+                "network_name": "default",
+                "passthrough": "",
+                "vepa": "",
+                "wait_for_lease": false
+              },
+              {
+                "addresses": [],
+                "bridge": "",
+                "hostname": "",
+                "mac": "52:54:00:00:02:54",
+                "macvtap": "",
+                "network_id": "a86b7c22-a7ce-4051-9954-9ffc3323c258",
+                "network_name": "lan-secdevops",
+                "passthrough": "",
+                "vepa": "",
+                "wait_for_lease": false
+              }
+            ],
+            "nvram": [],
+            "qemu_agent": false,
+            "running": true,
+            "timeouts": null,
+            "tpm": [],
+            "type": "kvm",
+            "vcpu": 2,
+            "video": [],
+            "xml": []
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjozMDAwMDAwMDAwMDB9fQ==",
+          "dependencies": [
+            "libvirt_cloudinit_disk.commoninit_podman_v2",
+            "libvirt_cloudinit_disk.commoninit_redteam_v2",
+            "libvirt_cloudinit_disk.commoninit_wazuh_v2",
+            "libvirt_network.lan_secdevops",
+            "libvirt_volume.opnsense_disk",
+            "libvirt_volume.podman_disk_v2",
+            "libvirt_volume.redteam_disk_v2",
+            "libvirt_volume.ubuntu_base_image",
+            "libvirt_volume.wazuh_disk_v2",
+            "null_resource.fix_permissions_v2"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "libvirt_domain",
+      "name": "podman_node",
+      "provider": "provider[\"registry.terraform.io/dmacvicar/libvirt\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arch": "x86_64",
+            "autostart": false,
+            "boot_device": [],
+            "cloudinit": "/var/lib/libvirt/images/commoninit_podman_v2.iso;815e746e-b48a-4adf-8638-9b1fab271d2b",
+            "cmdline": [],
+            "console": [
+              {
+                "source_host": "127.0.0.1",
+                "source_path": "",
+                "source_service": "0",
+                "target_port": "0",
+                "target_type": "serial",
+                "type": "pty"
+              }
+            ],
+            "coreos_ignition": null,
+            "cpu": [
+              {
+                "mode": "custom"
+              }
+            ],
+            "description": "",
+            "disk": [
+              {
+                "block_device": "",
+                "file": "",
+                "scsi": false,
+                "url": "",
+                "volume_id": "/var/lib/libvirt/images/podman-disk-v2.qcow2",
+                "wwn": ""
+              }
+            ],
+            "emulator": "/usr/bin/qemu-system-x86_64",
+            "filesystem": [],
+            "firmware": null,
+            "fw_cfg_name": "opt/com.coreos/config",
+            "graphics": [],
+            "id": "18b63855-e7b2-4fe1-b4bd-05e29aef3d6d",
+            "initrd": "",
+            "kernel": "",
+            "machine": "ubuntu",
+            "memory": 4096,
+            "metadata": null,
+            "name": "podman-node",
+            "network_interface": [
+              {
+                "addresses": [],
+                "bridge": "",
+                "hostname": "",
+                "mac": "52:54:00:00:00:20",
+                "macvtap": "",
+                "network_id": "a86b7c22-a7ce-4051-9954-9ffc3323c258",
+                "network_name": "lan-secdevops",
+                "passthrough": "",
+                "vepa": "",
+                "wait_for_lease": false
+              }
+            ],
+            "nvram": [],
+            "qemu_agent": false,
+            "running": true,
+            "timeouts": null,
+            "tpm": [],
+            "type": "kvm",
+            "vcpu": 2,
+            "video": [],
+            "xml": []
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjozMDAwMDAwMDAwMDB9fQ==",
+          "dependencies": [
+            "libvirt_cloudinit_disk.commoninit_podman_v2",
+            "libvirt_cloudinit_disk.commoninit_redteam_v2",
+            "libvirt_cloudinit_disk.commoninit_wazuh_v2",
+            "libvirt_network.lan_secdevops",
+            "libvirt_volume.opnsense_disk",
+            "libvirt_volume.podman_disk_v2",
+            "libvirt_volume.redteam_disk_v2",
+            "libvirt_volume.ubuntu_base_image",
+            "libvirt_volume.wazuh_disk_v2",
+            "null_resource.fix_permissions_v2"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "libvirt_domain",
+      "name": "redteam_node",
+      "provider": "provider[\"registry.terraform.io/dmacvicar/libvirt\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arch": "x86_64",
+            "autostart": false,
+            "boot_device": [],
+            "cloudinit": "/var/lib/libvirt/images/commoninit_redteam_v2.iso;131a0572-c653-4dcd-bd39-fad1e37789db",
+            "cmdline": [],
+            "console": [
+              {
+                "source_host": "127.0.0.1",
+                "source_path": "",
+                "source_service": "0",
+                "target_port": "0",
+                "target_type": "serial",
+                "type": "pty"
+              }
+            ],
+            "coreos_ignition": null,
+            "cpu": [
+              {
+                "mode": "custom"
+              }
+            ],
+            "description": "",
+            "disk": [
+              {
+                "block_device": "",
+                "file": "",
+                "scsi": false,
+                "url": "",
+                "volume_id": "/var/lib/libvirt/images/redteam-disk-v2.qcow2",
+                "wwn": ""
+              }
+            ],
+            "emulator": "/usr/bin/qemu-system-x86_64",
+            "filesystem": [],
+            "firmware": null,
+            "fw_cfg_name": "opt/com.coreos/config",
+            "graphics": [],
+            "id": "c7a27e1e-0604-4796-be58-a2f04a4761f1",
+            "initrd": "",
+            "kernel": "",
+            "machine": "ubuntu",
+            "memory": 4096,
+            "metadata": null,
+            "name": "redteam-node",
+            "network_interface": [
+              {
+                "addresses": [],
+                "bridge": "",
+                "hostname": "redteam-node",
+                "mac": "52:54:00:0A:7A:CC",
+                "macvtap": "",
+                "network_id": "9a205728-251a-4ca7-a687-64f64e94da03",
+                "network_name": "default",
+                "passthrough": "",
+                "vepa": "",
+                "wait_for_lease": true
+              }
+            ],
+            "nvram": [],
+            "qemu_agent": false,
+            "running": true,
+            "timeouts": null,
+            "tpm": [],
+            "type": "kvm",
+            "vcpu": 2,
+            "video": [],
+            "xml": []
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjozMDAwMDAwMDAwMDB9fQ==",
+          "dependencies": [
+            "libvirt_cloudinit_disk.commoninit_podman_v2",
+            "libvirt_cloudinit_disk.commoninit_redteam_v2",
+            "libvirt_cloudinit_disk.commoninit_wazuh_v2",
+            "libvirt_volume.opnsense_disk",
+            "libvirt_volume.podman_disk_v2",
+            "libvirt_volume.redteam_disk_v2",
+            "libvirt_volume.ubuntu_base_image",
+            "libvirt_volume.wazuh_disk_v2",
+            "null_resource.fix_permissions_v2"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "libvirt_domain",
+      "name": "wazuh_server",
+      "provider": "provider[\"registry.terraform.io/dmacvicar/libvirt\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arch": "x86_64",
+            "autostart": false,
+            "boot_device": [],
+            "cloudinit": "/var/lib/libvirt/images/commoninit_wazuh_v2.iso;263a18c7-683e-48f1-a77e-e8d4a0b51a7b",
+            "cmdline": [],
+            "console": [
+              {
+                "source_host": "127.0.0.1",
+                "source_path": "",
+                "source_service": "0",
+                "target_port": "0",
+                "target_type": "serial",
+                "type": "pty"
+              }
+            ],
+            "coreos_ignition": null,
+            "cpu": [
+              {
+                "mode": "custom"
+              }
+            ],
+            "description": "",
+            "disk": [
+              {
+                "block_device": "",
+                "file": "",
+                "scsi": false,
+                "url": "",
+                "volume_id": "/var/lib/libvirt/images/wazuh-disk-v2.qcow2",
+                "wwn": ""
+              }
+            ],
+            "emulator": "/usr/bin/qemu-system-x86_64",
+            "filesystem": [],
+            "firmware": null,
+            "fw_cfg_name": "opt/com.coreos/config",
+            "graphics": [],
+            "id": "11d0435f-2a62-4d05-9082-60dfdbdd587c",
+            "initrd": "",
+            "kernel": "",
+            "machine": "ubuntu",
+            "memory": 6144,
+            "metadata": null,
+            "name": "wazuh-server",
+            "network_interface": [
+              {
+                "addresses": [],
+                "bridge": "",
+                "hostname": "",
+                "mac": "52:54:00:00:00:10",
+                "macvtap": "",
+                "network_id": "a86b7c22-a7ce-4051-9954-9ffc3323c258",
+                "network_name": "lan-secdevops",
+                "passthrough": "",
+                "vepa": "",
+                "wait_for_lease": false
+              }
+            ],
+            "nvram": [],
+            "qemu_agent": false,
+            "running": true,
+            "timeouts": null,
+            "tpm": [],
+            "type": "kvm",
+            "vcpu": 2,
+            "video": [],
+            "xml": []
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjozMDAwMDAwMDAwMDB9fQ==",
+          "dependencies": [
+            "libvirt_cloudinit_disk.commoninit_podman_v2",
+            "libvirt_cloudinit_disk.commoninit_redteam_v2",
+            "libvirt_cloudinit_disk.commoninit_wazuh_v2",
+            "libvirt_network.lan_secdevops",
+            "libvirt_volume.opnsense_disk",
+            "libvirt_volume.podman_disk_v2",
+            "libvirt_volume.redteam_disk_v2",
+            "libvirt_volume.ubuntu_base_image",
+            "libvirt_volume.wazuh_disk_v2",
+            "null_resource.fix_permissions_v2"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "libvirt_network",
+      "name": "lan_secdevops",
+      "provider": "provider[\"registry.terraform.io/dmacvicar/libvirt\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "addresses": [
+              "10.0.0.0/24"
+            ],
+            "autostart": true,
+            "bridge": "virbr1",
+            "dhcp": [
+              {
+                "enabled": false
+              }
+            ],
+            "dns": [
+              {
+                "enabled": false,
+                "forwarders": [],
+                "hosts": [],
+                "local_only": false,
+                "srvs": []
+              }
+            ],
+            "dnsmasq_options": [],
+            "domain": null,
+            "id": "a86b7c22-a7ce-4051-9954-9ffc3323c258",
+            "mode": "none",
+            "mtu": null,
+            "name": "lan-secdevops",
+            "routes": [],
+            "xml": []
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "libvirt_volume",
+      "name": "opnsense_disk",
+      "provider": "provider[\"registry.terraform.io/dmacvicar/libvirt\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "base_volume_id": null,
+            "base_volume_name": null,
+            "base_volume_pool": null,
+            "format": "qcow2",
+            "id": "/var/lib/libvirt/images/opnsense26_v2.qcow2",
+            "name": "opnsense26_v2.qcow2",
+            "pool": "default",
+            "size": 21474836480,
+            "source": "./os_images/opnsense_v2618.qcow2",
+            "xml": []
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "libvirt_volume",
+      "name": "podman_disk_v2",
+      "provider": "provider[\"registry.terraform.io/dmacvicar/libvirt\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "base_volume_id": null,
+            "base_volume_name": null,
+            "base_volume_pool": null,
+            "format": "qcow2",
+            "id": "/var/lib/libvirt/images/podman-disk-v2.qcow2",
+            "name": "podman-disk-v2.qcow2",
+            "pool": "default",
+            "size": 21474836480,
+            "source": "./os_images/ubuntu-24.04-base.img",
+            "xml": []
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "libvirt_volume",
+      "name": "redteam_disk_v2",
+      "provider": "provider[\"registry.terraform.io/dmacvicar/libvirt\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "base_volume_id": null,
+            "base_volume_name": null,
+            "base_volume_pool": null,
+            "format": "qcow2",
+            "id": "/var/lib/libvirt/images/redteam-disk-v2.qcow2",
+            "name": "redteam-disk-v2.qcow2",
+            "pool": "default",
+            "size": 21474836480,
+            "source": "./os_images/ubuntu-24.04-base.img",
+            "xml": []
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "libvirt_volume",
+      "name": "ubuntu_base_image",
+      "provider": "provider[\"registry.terraform.io/dmacvicar/libvirt\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "base_volume_id": null,
+            "base_volume_name": null,
+            "base_volume_pool": null,
+            "format": "qcow2",
+            "id": "/var/lib/libvirt/images/ubuntu-24-04-base",
+            "name": "ubuntu-24-04-base",
+            "pool": "default",
+            "size": 21474836480,
+            "source": "./os_images/ubuntu-24.04-base.img",
+            "xml": []
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "libvirt_volume",
+      "name": "wazuh_disk_v2",
+      "provider": "provider[\"registry.terraform.io/dmacvicar/libvirt\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "base_volume_id": "/var/lib/libvirt/images/ubuntu-24-04-base",
+            "base_volume_name": null,
+            "base_volume_pool": null,
+            "format": "qcow2",
+            "id": "/var/lib/libvirt/images/wazuh-disk-v2.qcow2",
+            "name": "wazuh-disk-v2.qcow2",
+            "pool": "default",
+            "size": 53687091200,
+            "source": null,
+            "xml": []
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "libvirt_volume.ubuntu_base_image"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "local_file",
+      "name": "ansible_inventory",
+      "provider": "provider[\"registry.terraform.io/hashicorp/local\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "content": "[wazuh]\nwazuh-server ansible_host=10.0.0.10 ansible_user=walter\n\n[podman]\npodman-node ansible_host=10.0.0.20 ansible_user=walter\n\n[redteam]\nredteam-node ansible_host=IP desconocida ansible_user=walter\n",
+            "content_base64": null,
+            "content_base64sha256": "qYIBbtzqFpfjYZnheFIPDXhoO3CFI5dzqdkU6r5vQJM=",
+            "content_base64sha512": "qDRk579eFLZZdcofoEeGaLlYBRZvrBmh8imnnQ2IghitO28n+uhJW50RxEyKlV0H9oL/EdK0Ovqzyazmhd/GcQ==",
+            "content_md5": "94f64d45a9d6037bb43ec316c512a34c",
+            "content_sha1": "f59d799b59698fab31cff63170fc18be1dc97b41",
+            "content_sha256": "a982016edcea1697e36199e178520f0d78683b7085239773a9d914eabe6f4093",
+            "content_sha512": "a83464e7bf5e14b65975ca1fa0478668b95805166fac19a1f229a79d0d888218ad3b6f27fae8495b9d11c44c8a955d07f682ff11d2b43afab3c9ace685dfc671",
+            "directory_permission": "0777",
+            "file_permission": "0777",
+            "filename": "./../ansible/hosts.ini",
+            "id": "f59d799b59698fab31cff63170fc18be1dc97b41",
+            "sensitive_content": null,
+            "source": null
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "sensitive_content"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "dependencies": [
+            "libvirt_cloudinit_disk.commoninit_podman_v2",
+            "libvirt_cloudinit_disk.commoninit_redteam_v2",
+            "libvirt_cloudinit_disk.commoninit_wazuh_v2",
+            "libvirt_domain.redteam_node",
+            "libvirt_volume.opnsense_disk",
+            "libvirt_volume.podman_disk_v2",
+            "libvirt_volume.redteam_disk_v2",
+            "libvirt_volume.ubuntu_base_image",
+            "libvirt_volume.wazuh_disk_v2",
+            "null_resource.fix_permissions_v2"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "null_resource",
+      "name": "fix_permissions_v2",
+      "provider": "provider[\"registry.terraform.io/hashicorp/null\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "8589915134978164794",
+            "triggers": {
+              "opnsense_id": "/var/lib/libvirt/images/opnsense26_v2.qcow2",
+              "podman_id": "/var/lib/libvirt/images/podman-disk-v2.qcow2",
+              "redteam_id": "/var/lib/libvirt/images/redteam-disk-v2.qcow2",
+              "wazuh_id": "/var/lib/libvirt/images/wazuh-disk-v2.qcow2"
+            }
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "dependencies": [
+            "libvirt_cloudinit_disk.commoninit_podman_v2",
+            "libvirt_cloudinit_disk.commoninit_redteam_v2",
+            "libvirt_cloudinit_disk.commoninit_wazuh_v2",
+            "libvirt_volume.opnsense_disk",
+            "libvirt_volume.podman_disk_v2",
+            "libvirt_volume.redteam_disk_v2",
+            "libvirt_volume.ubuntu_base_image",
+            "libvirt_volume.wazuh_disk_v2"
+          ]
+        }
+      ]
+    }
+  ],
+  "check_results": null
+}

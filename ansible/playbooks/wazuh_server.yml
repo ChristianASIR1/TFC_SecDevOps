@@ -52,7 +52,7 @@
     - name: Configurar decodificadores para Suricata (OPNsense)
       ansible.builtin.blockinfile:
         path: /var/ossec/etc/decoders/local_decoder.xml
-        marker: "<!-- {mark} ANSIBLE MANAGED BLOCK (DECODERS) -->"
+        marker: "<!-- {mark} Decodificadores Wazuh // Ansible -->"
         block: |
           <decoder name="suricata">
             <program_name>^suricata</program_name>
@@ -62,6 +62,13 @@
             <parent>suricata</parent>
             <plugin_decoder>JSON_Decoder</plugin_decoder>
           </decoder>
+          
+          <decoder name="dvwa-rootless">
+            <parent>systemd</parent>
+            <regex>(\d+.\d+.\d+.\d+)</regex>
+            <order>srcip</order>
+          </decoder>
+
       notify: Reiniciar Wazuh Manager
 
     - name: Desplegar reglas personalizadas (SQLi, Brute Force y Suricata)
@@ -70,30 +77,30 @@
         owner: root
         group: wazuh
         mode: '0660'
-        marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
+        marker: "<!-- {mark} Reglas Wazuh // Ansible -->"
         block: |
           <group name="secdevops_rules,">
-            <rule id="100005" level="1">
+            <rule id="100005" level="0">
               <decoded_as>suricata</decoded_as>
               <description>[RED] Suricata: Logs de OPNsense procesados correctamente.</description>
             </rule>
 
-            <rule id="100006" level="3">
+            <rule id="100006" level="5">
               <if_sid>100005</if_sid>
               <field name="event_type">^alert$</field>
-              <description>[RED] Suricata: Alerta detectada en tráfico - $(alert.signature)</description>
+              <description>[RED] Suricata: Alerta detectada - $(alert.signature)</description>
             </rule>
 
             <rule id="100007" level="12">
-              <if_matched_sid>100006</if_matched_sid>
+              <if_sid>100006</if_sid>
               <field name="alert.severity">^1$</field>
-              <description>[RED] Suricata: Alerta CRÍTICA detectada en tránsito</description>
+              <description>[RED] Suricata: Alerta CRÍTICA - $(alert.signature)</description>
             </rule>
 
             <rule id="100008" level="5">
               <if_sid>100006</if_sid>
               <match>403 Forbidden</match>
-              <description>[RED] Suricata: Confirmado bloqueo perimetral (403 Detectado)</description>
+              <description>[RED] Suricata: Confirmado bloqueo del WAF (403 Detectado)</description>
             </rule>
 
             <rule id="100011" level="12">
@@ -108,25 +115,55 @@
               <description>[WAF] ModSecurity: Escaneo de vulnerabilidades detectado</description>
             </rule>
 
-            <rule id="100022" level="10" frequency="10" timeframe="60">
-              <if_matched_sid>31108, 31100</if_matched_sid>
-              <match>POST /login.php</match>
+            <rule id="100020" level="0">
+              <program_name>systemd-dvwa</program_name>
+              <description>[WEB] Logs del servicio DVWA.</description>
+            </rule>
+
+            <rule id="100021" level="1">
+              <if_sid>100020</if_sid>
+              <regex type="pcre2">POST\s+/login\.php.*302</regex>
+              <description>[WEB] Intento de login en DVWA desde $(srcip).</description>
+            </rule>
+
+            <rule id="100022" level="15" frequency="8" timeframe="60">
+              <if_matched_sid>100021</if_matched_sid>
               <same_source_ip />
-              <description>[WAF] ModSecurity: Ataque de FUERZA BRUTA detectado en panel de acceso</description>
+              <description>[WEB] Ataque de FUERZA BRUTA detectado desde la IP $(srcip)</description>
               <mitre><id>T1110</id></mitre>
             </rule>
 
-            <rule id="100030" level="7">
+            <rule id="100030" level="3">
               <if_sid>5715</if_sid>
               <description>[HOST] Acceso SSH exitoso en el nodo $(hostname)</description>
             </rule>
 
             <rule id="100031" level="0">
-              <if_sid>533</if_sid>
-              <match>conmon|systemd-resolve</match>
+              <if_sid>533, 530</if_sid>
+              <regex>conmon|systemd-resolve|node</regex>
               <description>[HOST] Silenciados cambios de proceso internos.</description>
             </rule>
+
+            <rule id="100013" level="0">
+              <if_sid>31333</if_sid>
+              <description>Silenciadas alertas genéricas de ModSecurity para evitar duplicados.</description>
+            </rule>
+
+            <rule id="651" level="10" overwrite="yes">
+              <field name="parameters.program">firewall-drop</field>
+              <field name="command">add</field>
+              <description>[HOST] Respuesta Activa: Iniciando bloqueo de IP $(srcip) vía firewall-drop</description>
+            </rule>
+
+            <rule id="652" level="3" overwrite="yes">
+              <field name="parameters.program">firewall-drop</field>
+              <field name="command">delete</field>
+              <description>[HOST] Respuesta Activa: IP $(srcip) desbloqueada vía firewall-drop</description>
+            </rule>
+
+
           </group>
+
       notify: Reiniciar Wazuh Manager
 
     - name: Configurar Respuesta Activa en ossec.conf
