@@ -88,48 +88,31 @@
             <rule id="100006" level="5">
               <if_sid>100005</if_sid>
               <field name="event_type">^alert$</field>
-              <description>[RED] Suricata: Alerta detectada: $(alert.category) -  $(alert.signature) desde la IP: $(flow.src_ip)</description>
+              <description>[RED] Suricata: Alerta detectada - $(alert.signature)</description>
             </rule>
 
             <rule id="100007" level="12">
               <if_sid>100006</if_sid>
               <field name="alert.severity">^1$</field>
-              <description>[RED] Suricata: Alerta CRÍTICA: $(alert.category) - $(alert.signature) desde la IP: $(flow.src_ip)</description>
+              <description>[RED] Suricata: Alerta CRÍTICA - $(alert.signature)</description>
             </rule>
 
-            <rule id="100008" level="2">
+            <rule id="100008" level="5">
               <if_sid>100006</if_sid>
               <match>403 Forbidden</match>
-              <description>[RED] Suricata: Confirmado bloqueo del WAF (403 Detectado) a la IP $(flow.src_ip)</description>
-            </rule>
-
-            <rule id="100009" level="15" frequency="15" timeframe="30">
-              <if_matched_sid>100008</if_matched_sid>
-              <same_source_ip />
-              <description>[ALERTA] Escaneo agresivo detectado: Mas de 15 bloqueos WAF en 30s desde $(flow.src_ip)</description>
+              <description>[RED] Suricata: Confirmado bloqueo del WAF (403 Detectado)</description>
             </rule>
 
             <rule id="100011" level="12">
               <if_sid>31333</if_sid>
-              <match>SQL Injection Attack|sqli|SQL Injection</match>
-              <description>[WAF] ModSecurity: Inyección SQL bloqueada | Origen: $(srcip)</description>
+              <match>SQL Injection Attack Detected</match>
+              <description>[WAF] ModSecurity: Intento de Inyección SQL detenido</description>
             </rule>
 
-            <rule id="100012" level="13">
-              <if_sid>100011</if_sid>
+            <rule id="100012" level="10">
+              <if_sid>31333</if_sid>
               <match>sqlmap</match>
-              <description>[WAF] ModSecurity: Escaneo SQLmap detectado | Origen: $(srcip)</description>
-            </rule>
-
-            <rule id="100013" level="10">
-              <if_sid>31333</if_sid>
-              <match>Nikto|Nmap|DirBuster|Known Scanners</match>
-              <description>[WAF] ModSecurity: Escaneo de vulnerabilidades detectado | Origen: $(srcip)</description>
-            </rule>
-            
-            <rule id="100014" level="1">
-              <if_sid>31333</if_sid>
-              <description>Silenciadas alertas genéricas de ModSecurity para evitar duplicados.</description>
+              <description>[WAF] ModSecurity: Escaneo de vulnerabilidades detectado</description>
             </rule>
 
             <rule id="100020" level="0">
@@ -156,9 +139,14 @@
             </rule>
 
             <rule id="100031" level="0">
-              <if_sid>533, 530, 19010, 19011</if_sid>
+              <if_sid>533, 530</if_sid>
               <regex>conmon|systemd-resolve|node</regex>
               <description>[HOST] Silenciados cambios de proceso internos.</description>
+            </rule>
+
+            <rule id="100013" level="0">
+              <if_sid>31333</if_sid>
+              <description>Silenciadas alertas genéricas de ModSecurity para evitar duplicados.</description>
             </rule>
 
             <rule id="651" level="10" overwrite="yes">
@@ -172,6 +160,8 @@
               <field name="command">delete</field>
               <description>[HOST] Respuesta Activa: IP $(srcip) desbloqueada vía firewall-drop</description>
             </rule>
+
+
           </group>
 
       notify: Reiniciar Wazuh Manager
