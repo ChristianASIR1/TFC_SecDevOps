@@ -32,26 +32,6 @@
         - { key: 'MACs', value: '-hmac-md5,hmac-md5-96,hmac-ripemd160,umac-64@openssh.com,hmac-md5-etm@openssh.com,hmac-md5-96-etm@openssh.com,hmac-ripemd160-etm@openssh.com,umac-64-etm@openssh.com,umac-128-etm@openssh.com' }
       notify: Reiniciar SSH
 
-    - name: Crear directorio de override para el agente de Wazuh
-      ansible.builtin.file:
-        path: /etc/systemd/system/wazuh-agent.service.d
-        state: directory
-        mode: '0755'
-      when: "'wazuh-agent.service' in ansible_facts.services"
-
-    - name: Configurar dependencia Servicio Ssh levantado en el Agente
-      ansible.builtin.copy:
-        dest: /etc/systemd/system/wazuh-agent.service.d/override.conf
-        content: |
-          [Unit]
-          After=ssh.service
-          Wants=ssh.service
-          
-          [Service]
-          ExecStartPre=/bin/sleep 5
-      when: "'wazuh-agent.service' in ansible_facts.services"
-      notify: Recargar systemd y reiniciar agente
-
 
 # ----------------- Hardening de red (SYSCTL) ------------ #
 

@@ -7,7 +7,7 @@
 # Variables #
 DIR_PROYECTO="/home/walter/v2_secdevops"
 LLAVE_SSH="$DIR_PROYECTO/ssh_keys/ssh_tfc_v2"
-IP_REDTEAM=$(terraform -chdir=terraform output -raw redteam_ip 2>/dev/null)
+IP_REDTEAM=$(terraform -chdir="$DIR_PROYECTO/terraform" output -raw redteam_ip 2>/dev/null)
 #IP_REDTEAM=$(cat /home/walter/v2_secdevops/ansible/hosts.ini | grep redteam | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b")
 
 
@@ -47,6 +47,8 @@ terraform init
 terraform apply -auto-approve
 cd ..
 
+IP_REDTEAM=$(terraform -chdir="$DIR_PROYECTO/terraform" output -raw redteam_ip 2>/dev/null)
+
 echo "Esperando inicialización del SO y SSH (Cloud-init)"
 sleep 45
 
@@ -67,19 +69,21 @@ export ANSIBLE_SSH_COMMON_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFil
 echo "Ejecutando 1/6: Despliegue inicial..."
 ansible-playbook -i ansible/hosts.ini ansible/playbooks/despliegue_inicial.yml --private-key "$LLAVE_SSH"
 
-echo "Ejecutando 2/6: Hardening SSH"
-ansible-playbook -i ansible/hosts.ini ansible/playbooks/hardening_ssh.yml --private-key "$LLAVE_SSH"
-
 echo "Ejecutando 3/6: Instalación Wazuh Manager"
 ansible-playbook -i ansible/hosts.ini ansible/playbooks/wazuh_server.yml --private-key "$LLAVE_SSH"
 
-echo "Ejecutando 4/6: Despliegue Podman, DVWA y Wazuh Agent"
+echo "Ejecutando 4/6: Despliegue Podman, DVWA, WAF y Wazuh Agent"
 ansible-playbook -i ansible/hosts.ini ansible/playbooks/podman-node.yml --private-key "$LLAVE_SSH"
 
-echo "Ejecutando 5/6: Despliegue WAF"
-ansible-playbook -i ansible/hosts.ini ansible/playbooks/instalar_waf.yml --private-key "$LLAVE_SSH"
 
-echo "Ejecutando 6/6: Preparación herramientas Red Team"
+echo "Ejecutando 2/6: Hardening SSH"
+ansible-playbook -i ansible/hosts.ini ansible/playbooks/hardening_ssh.yml --private-key "$LLAVE_SSH"
+
+# Versión para contenedores Rootful
+#echo "Ejecutando 6/6: Despliegue WAF"
+#ansible-playbook -i ansible/hosts.ini ansible/playbooks/instalar_waf.yml --private-key "$LLAVE_SSH"
+
+echo "Ejecutando 5/5: Preparación herramientas Red Team"
 ansible-playbook -i ansible/hosts.ini ansible/playbooks/preparar_redteam.yml --private-key "$LLAVE_SSH"
 
 

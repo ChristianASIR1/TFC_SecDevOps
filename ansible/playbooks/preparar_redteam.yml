@@ -27,6 +27,14 @@
           - git
         state: present
 
+    - name: Crear directorio para scripts del RedTeam
+      ansible.builtin.file:
+        path: /home/walter/scripts
+        state: directory
+        owner: walter
+        group: walter
+        mode: '0755'
+
     - name: Optimizar OS para ataques de alta concurrencia (File Descriptors)
       ansible.builtin.blockinfile:
         path: /etc/security/limits.conf

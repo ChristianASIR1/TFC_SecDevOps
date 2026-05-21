@@ -12,6 +12,45 @@
     dvwa_port: 8082
 
   tasks:
+
+    - name: Instalar Podman y motor de contenedores
+      ansible.builtin.apt:
+        name: [podman, gnupg2, curl]
+        state: latest
+        update_cache: yes
+
+    - name: Configurar Repositorio y Agente Wazuh
+      block:
+
+        - name: Añadir llave GPG
+          ansible.builtin.shell: "curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/wazuh.gpg --import && chmod 644 /usr/share/keyrings/wazuh.gpg"
+          args:
+            creates: /usr/share/keyrings/wazuh.gpg
+
+        - name: Añadir repo
+          ansible.builtin.apt_repository:
+            repo: "deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main"
+
+        - name: Instalar agente
+          ansible.builtin.apt:
+            name: wazuh-agent
+            state: latest
+            update_cache: yes
+
+    - name: Vincular Agente al Manager (10.0.0.10)
+      ansible.builtin.lineinfile:
+        path: /var/ossec/etc/ossec.conf
+        regexp: '<address>MANAGER_IP</address>'
+        line: "      <address>10.0.0.10</address>"
+      notify: Reiniciar Agente
+
+    - name: Habilitar y arrancar el servicio del agente
+      systemd:
+        name: wazuh-agent
+        enabled: yes
+        state: started
+
+#---------------------------------------------------------------------------------------------------------------
     - name: Persistencia de procesos para el usuario (Linger)
       ansible.builtin.command: "loginctl enable-linger {{ user_name }}"
       args:
@@ -99,15 +138,20 @@
 
           [Install]
           WantedBy=default.target
+    
+    - name: Despertar el motor systemd del usuario (necesario en máquinas nuevas)
+      ansible.builtin.command: "systemctl start user@1000.service"
 
-    - name: Iniciar servicios en el contexto de usuario walter
+    - name: Iniciar servicios Quadlet en modo usuario
       ansible.builtin.systemd:
         name: "{{ item }}"
         scope: user
-        state: started
-        enabled: yes
+        state: restarted
         daemon_reload: yes
+      become: yes
       become_user: "{{ user_name }}"
+      environment:
+        XDG_RUNTIME_DIR: "/run/user/1000"
       loop:
         - dvwa
         - waf
@@ -126,6 +170,24 @@
             <log_format>apache</log_format>
             <location>{{ user_home }}/waf/logs/error.log</location>
           </localfile>
+      notify: Reiniciar Agente
+
+    - name: Crear directorio de override para el agente de Wazuh
+      ansible.builtin.file:
+        path: /etc/systemd/system/wazuh-agent.service.d
+        state: directory
+        mode: '0755'
+
+    - name: Configurar dependencia Servicio Ssh levantado en el Agente
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/wazuh-agent.service.d/override.conf
+        content: |
+          [Unit]
+          After=ssh.service
+          Wants=ssh.service
+
+          [Service]
+          ExecStartPre=/bin/sleep 5
       notify: Reiniciar Agente
 
   handlers:
