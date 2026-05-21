@@ -66,22 +66,18 @@ done
 export ANSIBLE_HOST_KEY_CHECKING=False
 export ANSIBLE_SSH_COMMON_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 
-echo "Ejecutando 1/6: Despliegue inicial..."
+echo "Ejecutando 1/5: Despliegue inicial..."
 ansible-playbook -i ansible/hosts.ini ansible/playbooks/despliegue_inicial.yml --private-key "$LLAVE_SSH"
 
-echo "Ejecutando 3/6: Instalación Wazuh Manager"
+echo "Ejecutando 2/5: Instalación Wazuh Manager"
 ansible-playbook -i ansible/hosts.ini ansible/playbooks/wazuh_server.yml --private-key "$LLAVE_SSH"
 
-echo "Ejecutando 4/6: Despliegue Podman, DVWA, WAF y Wazuh Agent"
+echo "Ejecutando 3/5: Despliegue Podman, DVWA, WAF y Wazuh Agent"
 ansible-playbook -i ansible/hosts.ini ansible/playbooks/podman-node.yml --private-key "$LLAVE_SSH"
+chmod 600 /home/walter/v2_secdevops/credenciales_wazuh.txt
 
-
-echo "Ejecutando 2/6: Hardening SSH"
+echo "Ejecutando 4/5: Hardening SSH"
 ansible-playbook -i ansible/hosts.ini ansible/playbooks/hardening_ssh.yml --private-key "$LLAVE_SSH"
-
-# Versión para contenedores Rootful
-#echo "Ejecutando 6/6: Despliegue WAF"
-#ansible-playbook -i ansible/hosts.ini ansible/playbooks/instalar_waf.yml --private-key "$LLAVE_SSH"
 
 echo "Ejecutando 5/5: Preparación herramientas Red Team"
 ansible-playbook -i ansible/hosts.ini ansible/playbooks/preparar_redteam.yml --private-key "$LLAVE_SSH"
