@@ -63,6 +63,6 @@ Este proyecto utiliza el paradigma de Infraestructura como Código (IaC) puro. A
 El proyecto cuenta con un script que fusiona las fases de provisión (Terraform) y configuración (Ansible), resolviendo las condiciones de carrera y validando la disponibilidad de los puertos antes de inyectar configuraciones.
 
 ```bash
-git clone git@github.com:ChristianASIR1/TFC_SecDevOps.git
-cd TFC_SecDevOps
+git clone git@github.com:ChristianASIR1/TFC_SecDevOps.git ~/v2_secdevops && cd ~/v2_secdevops && chmod +x scripts/despliegue.sh 
+cd ~/v2_secdevops
 ./scripts/despliegue.sh
