@@ -1,5 +1,7 @@
 # 🛡️ TFC SecDevOps: Laboratorio de Seguridad y Automatización
 
+![Ubuntu](https://img.shields.io/badge/Ubuntu-24.04_LTS-E95420.svg?logo=ubuntu&logoColor=white)
+![OPNsense](https://img.shields.io/badge/OPNsense-24.1_Stable-D21226.svg?logo=opnsense&logoColor=white)
 ![Terraform](https://img.shields.io/badge/Terraform-1.x-623CE4.svg?logo=terraform)
 ![Ansible](https://img.shields.io/badge/Ansible-Core-EE0000.svg?logo=ansible)
 ![Wazuh](https://img.shields.io/badge/Wazuh-4.x-0078D4.svg?logo=wazuh)
