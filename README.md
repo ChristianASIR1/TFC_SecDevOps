@@ -16,12 +16,11 @@ Todo el aprovisionamiento de recursos (KVM/Libvirt) y la configuración del soft
 
 
 [![Topología de Red SecDevOps](./docs/topologia.png)](./docs/topologia.png)
+*Figura 1: Topología lógica y física del laboratorio SecDevOps. Se detalla la segmentación entre la zona WAN (Red Team) y LAN (Blue Team) mediante el firewall OPNsense, así como el anidamiento de contenedores en el nodo víctima.*
 
 Pulsa en el siguiente botón para ir al esquema dinámico de IsoFlow:
 
 [![Infrastructura](https://img.shields.io/badge/Infrastructure-IsoFlow-blue?style=for-the-badge&logo=diagrams.net)](https://isoflow.io/project/cmp3pprde03mzo41vn8qtiqg5)
-
-*Figura 1: Topología lógica y física del laboratorio SecDevOps. Se detalla la segmentación entre la zona WAN (Red Team) y LAN (Blue Team) mediante el firewall OPNsense, así como el anidamiento de contenedores en el nodo víctima.*
 
 
 El entorno está segmentado mediante un firewall perimetral (OPNsense) que separa el tráfico hostil de la red interna de monitorización.
