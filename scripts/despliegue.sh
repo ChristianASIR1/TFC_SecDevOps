@@ -7,8 +7,8 @@
 # Variables #
 DIR_PROYECTO="/home/walter/v2_secdevops"
 LLAVE_SSH="$DIR_PROYECTO/ssh_keys/ssh_tfc_v2"
-IP_REDTEAM=$(terraform -chdir="$DIR_PROYECTO/terraform" output -raw redteam_ip 2>/dev/null)
-#IP_REDTEAM=$(cat /home/walter/v2_secdevops/ansible/hosts.ini | grep redteam | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b")
+#IP_REDTEAM=$(terraform -chdir="$DIR_PROYECTO/terraform" output -raw redteam_ip 2>/dev/null)
+IP_REDTEAM=$(cat /home/walter/v2_secdevops/ansible/hosts.ini | grep redteam | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b")
 
 
 # Parar la ejecución si falla algun comando:
@@ -87,6 +87,7 @@ ansible-playbook -i ansible/hosts.ini ansible/playbooks/preparar_redteam.yml --p
 
 echo "[EXITO]  Infraestructura SecDevOps desplegada"
 echo " Manager Wazuh: https://10.0.0.10"
-echo " Aplicación DVWA: http://10.0.0.20:8080"
+echo " Aplicación DVWA: http://10.0.0.20:8082 // 192.168.122.144:80"
+echo " Firewall OPNsense: http://10.0.0.254:8443"
 echo "MV Red-Team:  ${IP_REDTEAM:-IP_No_Encontrada}"
 echo " Contraseñas guardadas en: $DIR_PROYECTO/credenciales_wazuh.txt"
