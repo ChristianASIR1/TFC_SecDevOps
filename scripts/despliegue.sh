@@ -5,10 +5,10 @@
 # ==========================================================
 
 # Variables #
-DIR_PROYECTO="/home/walter/v2_secdevops"
+DIR_PROYECTO="/home/walter/proyectos/tfc/SecDevOps"
 LLAVE_SSH="$DIR_PROYECTO/ssh_keys/ssh_tfc_v2"
 #IP_REDTEAM=$(terraform -chdir="$DIR_PROYECTO/terraform" output -raw redteam_ip 2>/dev/null)
-IP_REDTEAM=$(cat /home/walter/v2_secdevops/ansible/hosts.ini | grep redteam | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b")
+IP_REDTEAM=$(cat $DIR_PROYECTO/ansible/hosts.ini | grep redteam | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b")
 
 
 # Parar la ejecución si falla algun comando:

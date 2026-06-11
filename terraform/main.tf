@@ -51,7 +51,7 @@ resource "libvirt_cloudinit_disk" "commoninit_redteam_v2" {
 resource "libvirt_volume" "opnsense_disk" {
   name   = "opnsense26_v2.qcow2"
   pool   = "default"
-  source = "./os_images/opnsense_v2618.qcow2"
+  source = "${path.module}/os_images/opnsense_v2618.qcow2"
   format = "qcow2"
 }
 
@@ -60,7 +60,7 @@ resource "libvirt_volume" "opnsense_disk" {
 resource "libvirt_volume" "ubuntu_base_image" {
   name   = "ubuntu-24-04-base"
   pool   = "default"
-  source = "./os_images/ubuntu-24.04-base.img"
+  source = "${path.module}/os_images/ubuntu-24.04-base.img"
 }
 
 
