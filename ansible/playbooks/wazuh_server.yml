@@ -3,6 +3,10 @@
   hosts: wazuh
   become: yes
 
+  vars:
+    src_passw_vm: "/root/passwords.txt"
+    dest_passw_anf: "{{ lookup('env', 'HOME') }}/proyectos/tfc/SecDevOps/ansible/credenciales_wazuh.txt"
+
   tasks:
     - name: Actualizar caché de paquetes
       ansible.builtin.apt:
@@ -24,15 +28,15 @@
     - name: Extraer, mover y limpiar credenciales de Wazuh
       block:
         - name: Extraer txt de contraseñas
-          ansible.builtin.shell: "tar -axf /root/wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt -O > /root/passwords.txt"
+          ansible.builtin.shell: "tar -axf /root/wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt -O > {{ src_passw_vm }}"
         - name: Descargar a Anfitrión
           ansible.builtin.fetch:
-            src: /root/passwords.txt
-            dest: "/home/walter/v2_secdevops/credenciales_wazuh.txt"
+            src: "{{ src_passw_vm }}"
+            dest: "{{ dest_passw_anf }}"
             flat: yes
         - name: Eliminar rastro de contraseñas en MV (Hardening)
           ansible.builtin.file:
-            path: /root/passwords.txt
+            path: "{{ src_passw_vm }}"
             state: absent
 
     - name: Configurar receptor Syslog para OPNsense
