@@ -33,7 +33,7 @@
         state: directory
         owner: walter
         group: walter
-        mode: '0755'
+        mode: '0700'
 
     - name: Optimizar OS para ataques de alta concurrencia (File Descriptors)
       ansible.builtin.blockinfile:
@@ -79,7 +79,6 @@
         owner: walter
         group: walter
         mode: '0700'
-        
 
   handlers:
     - name: Aplicar sysctl
