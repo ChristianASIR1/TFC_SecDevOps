@@ -56,23 +56,11 @@
     - name: Configurar decodificadores para Suricata (OPNsense)
       ansible.builtin.blockinfile:
         path: /var/ossec/etc/decoders/local_decoder.xml
+        owner: root
+        group: wazuh
+        mode: '0660'
         marker: "<!-- {mark} Decodificadores Wazuh // Ansible -->"
-        block: |
-          <decoder name="suricata">
-            <program_name>^suricata</program_name>
-          </decoder>
-
-          <decoder name="suricata-json">
-            <parent>suricata</parent>
-            <plugin_decoder>JSON_Decoder</plugin_decoder>
-          </decoder>
-
-          <decoder name="dvwa-rootless">
-            <parent>systemd</parent>
-            <regex>(\d+.\d+.\d+.\d+)</regex>
-            <order>srcip</order>
-          </decoder>
-
+        block: "{{ lookup('file', 'files/local_decoder.xml') }}"
 
       notify: Reiniciar Wazuh Manager
 
@@ -83,145 +71,7 @@
         group: wazuh
         mode: '0660'
         marker: "<!-- {mark} Reglas Wazuh // Ansible -->"
-        block: |
-          <group name="secdevops_rules,">
-
-            <rule id="100100" level="0">
-              <decoded_as>suricata</decoded_as>
-              <description>[RED] Base: Logs de OPNsense procesados.</description>
-            </rule>
-
-            <rule id="100101" level="3">
-              <if_sid>100100</if_sid>
-              <field name="alert.severity">^3$</field>
-              <description>[RED] Suricata: Alerta Leve | Nivel $(alert.severity)/3 detectada | $(alert.signature) desde $(flow.src_ip)</description>
-            </rule>
-
-            <rule id="100102" level="7">
-              <if_sid>100100</if_sid>
-              <field name="alert.severity">^2$</field>
-              <description>[RED] Suricata: Alerta Media | Nivel $(alert.severity)/3 detectada | $(alert.signature) desde $(flow.src_ip)</description>
-            </rule>
-
-            <rule id="100103" level="13" frequency="15" timeframe="30">
-              <if_matched_sid>100102</if_matched_sid>
-              <same_field>src_ip</same_field>
-              <description>[Red] Suricata: Ataque masivo INTERMEDIO | Nivel $(alert.severity)/3 | $(alert.signature) desde $(flow.src_ip)</description>
-              <mitre><id>T1046</id></mitre>
-            </rule>
-
-            <rule id="100104" level="15">
-              <if_sid>100100</if_sid>
-              <field name="alert.severity">^1$</field>
-              <description>[RED] Suricata: Alerta CRÍTICA | Nivel $(alert.severity)/3 | $(alert.signature) desde $(flow.src_ip)</description>
-            </rule>
-
-            <rule id="100105" level="15" frequency="15" timeframe="30">
-              <if_matched_sid>100104</if_matched_sid>
-              <same_field>src_ip</same_field>
-              <description>[Red] Suricata: Ataque masivo CRÍTICO | Nivel $(alert.severity)/3 | $(alert.signature) desde $(flow.src_ip)</description>
-              <mitre><id>T1046</id></mitre>
-            </rule>
-
-
-            <rule id="100200" level="0">
-              <if_sid>31333</if_sid>
-              <description>[WAF] Base: Silenciador de alertas genéricas.</description>
-            </rule>
-
-            <rule id="100201" level="12">
-              <if_sid>100200</if_sid>
-              <match>Inbound Anomaly Score Exceeded</match>
-              <description>[WAF] ModSecurity: Ataque bloqueado por Puntuación Anómala Excedida | Origen: $(srcip)</description>
-            </rule>
-
-            <rule id="100202" level="15" frequency="15" timeframe="30">
-              <if_matched_sid>100201</if_matched_sid>
-              <same_source_ip />
-              <description>[ALERTA CRÍTICA] WAF: Ataque masivo bloqueado (>15 impactos en 30s) | Origen: $(srcip)</description>
-              <mitre><id>T1190</id></mitre>
-            </rule>
-
-            <rule id="100203" level="7">
-              <if_sid>31103</if_sid>
-              <description>[WAF] Nginx: Intento de Inyección SQL (SQLi) detectado | Origen: $(srcip)</description>
-            </rule>
-
-            <rule id="100204" level="7">
-              <if_sid>31104</if_sid>
-              <description>[WAF] Nginx: Intento de Cross-Site Scripting (XSS) detectado | Origen: $(srcip)</description>
-            </rule>
-
-            <rule id="100205" level="5">
-              <if_sid>31101</if_sid>
-              <description>[WAF] Nginx: Petición errónea o denegada (HTTP 4xx) | Origen: $(srcip)</description>
-            </rule>
-
-            <rule id="100206" level="8">
-              <if_sid>31508</if_sid>
-              <description>[WAF] Nginx: Herramienta automatizada detectada (User-Agent Malicioso) | Origen: $(srcip)</description>
-            </rule>
-
-            <rule id="100300" level="0">
-              <program_name>systemd-dvwa</program_name>
-              <description>[WEB] Base: Logs del servicio DVWA.</description>
-            </rule>
-
-            <rule id="100301" level="1">
-              <if_sid>100300</if_sid>
-              <regex type="pcre2">POST\s+/login\.php.*302</regex>
-              <description>[WEB] Intento de login en DVWA desde $(srcip).</description>
-            </rule>
-
-            <rule id="100302" level="15" frequency="8" timeframe="60">
-              <if_matched_sid>100301</if_matched_sid>
-              <same_source_ip />
-              <description>[ALERTA CRÍTICA] WEB: Ataque de FUERZA BRUTA detectado desde la IP $(srcip)</description>
-              <mitre><id>T1110</id></mitre>
-            </rule>
-
-
-            <rule id="100400" level="3">
-              <if_sid>5715</if_sid>
-              <description>[HOST] Acceso SSH exitoso en el nodo $(hostname)</description>
-            </rule>
-
-            <rule id="100401" level="0">
-              <if_sid>5716</if_sid>
-              <srcip>192.168.122.1</srcip>
-              <description>[HOST] Silenciado (Whitelist): Intento SSH fallido del anfitrión KVM (WAN).</description>
-            </rule>
-
-            <rule id="100402" level="0">
-              <if_sid>5716</if_sid>
-              <srcip>10.0.0.1</srcip>
-              <description>[HOST] Silenciado (Whitelist): Intento SSH fallido del anfitrión KVM (LAN).</description>
-            </rule>
-
-            <rule id="100408" level="0">
-              <if_sid>533,530</if_sid>
-              <regex>conmon|systemd-resolve|node|journald</regex>
-              <description>[HOST] Silenciados cambios de proceso internos de contenedores.</description>
-            </rule>
-
-            <rule id="100409" level="0">
-              <if_group>sca</if_group>
-              <description>[HOST] Silenciadas alertas del panel de auditoría SCA.</description>
-            </rule>
-
-
-            <rule id="651" level="10" overwrite="yes">
-              <field name="parameters.program">firewall-drop</field>
-              <field name="command">add</field>
-              <description>[AR] Respuesta Activa: Iniciando bloqueo de IP $(srcip) vía firewall-drop</description>
-            </rule>
-
-            <rule id="652" level="3" overwrite="yes">
-              <field name="parameters.program">firewall-drop</field>
-              <field name="command">delete</field>
-              <description>[AR] Respuesta Activa: IP $(srcip) desbloqueada vía firewall-drop</description>
-            </rule>
-            </group>
+        block: "{{ lookup('file', 'files/wazuh_local_rules.xml') }}"
 
       notify: Reiniciar Wazuh Manager
 

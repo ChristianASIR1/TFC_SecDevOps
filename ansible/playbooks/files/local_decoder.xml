@@ -1,0 +1,14 @@
+<decoder name="suricata">
+  <program_name>^suricata</program_name>
+</decoder>
+
+<decoder name="suricata-json">
+  <parent>suricata</parent>
+  <plugin_decoder>JSON_Decoder</plugin_decoder>
+</decoder>
+
+<decoder name="dvwa-rootless">
+  <parent>systemd</parent>
+  <regex>(\d+.\d+.\d+.\d+)</regex>
+  <order>srcip</order>
+</decoder>
