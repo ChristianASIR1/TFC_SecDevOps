@@ -53,8 +53,8 @@ Este proyecto utiliza el paradigma de Infraestructura como Código (IaC) puro. A
    
    Ejecuta en tu terminal:
    ```bash
-   mkdir -p ~/v2_secdevops/ssh_keys
-   ssh-keygen -t ed25519 -f ~/v2_secdevops/ssh_keys/ssh_tfc_v2 -N "" -C "tfc-secdevops"
+   mkdir -p ~/tfc_secdevops/ssh_keys
+   ssh-keygen -t ed25519 -f ~/tfc_secdevop/ssh_keys/ssh_tfc_v2 -N "" -C "tfc-secdevops"
 
 
 
@@ -64,6 +64,6 @@ Este proyecto utiliza el paradigma de Infraestructura como Código (IaC) puro. A
 El proyecto cuenta con un script que fusiona las fases de provisión (Terraform) y configuración (Ansible), resolviendo las condiciones de carrera y validando la disponibilidad de los puertos antes de inyectar configuraciones.
 
 ```bash
-git clone git@github.com:ChristianASIR1/TFC_SecDevOps.git ~/v2_secdevops && cd ~/v2_secdevops && chmod +x scripts/despliegue.sh 
-cd ~/v2_secdevops
+git clone git@github.com:ChristianASIR1/TFC_SecDevOps.git ~/tfc_secdevops && cd ~/tfc_secdevops && chmod +x scripts/despliegue.sh 
+cd ~/tfc_secdevops
 ./scripts/despliegue.sh
