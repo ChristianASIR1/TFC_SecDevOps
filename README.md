@@ -46,7 +46,7 @@ Este proyecto utiliza el paradigma de Infraestructura como Código (IaC) puro. A
    * **Virtualización:** `qemu-kvm`, `libvirt-daemon-system`, `libvirt-clients`, `bridge-utils`.
    * **Orquestación y Configuración:** `terraform`, `ansible`.
    
-   *Nota de permisos:* El usuario local debe pertenecer a los grupos `libvirt` y `kvm` para interactuar con el demonio de virtualización sin requerir privilegios de superusuario (`sudo`).
+   *Nota de permisos:* El usuario local debe pertenecer a los grupos `libvirt` y `kvm` para interactuar con el servicio de virtualización sin requerir privilegios de superusuario (`sudo`).
 
 2. **Infraestructura de Claves SSH:**
    Para cumplir con el principio de *Least Privilege* y evitar versionar credenciales, debes generar un par de claves locales. El script de despliegue validará su existencia.
